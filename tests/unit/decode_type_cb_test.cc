@@ -155,7 +155,7 @@ TEST_CASE("Decoder preserves sign-bit-set C.B branch immediates as encoded bits"
 
 TEST_CASE("Decoder does not decode non-CB compressed instructions as C.B") {
     Decoder decoder;
-    const auto instruction = decoder.decode(0x0000U);
+    const auto instruction = decoder.decode(0x2000U);
 
     REQUIRE(instruction == nullptr);
 }

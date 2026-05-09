@@ -102,8 +102,7 @@ TEST_CASE("Decoder only decodes the first compressed C.SSP instruction from a 32
 
 TEST_CASE("Decoder does not decode non-CSS compressed instructions as C.SSP") {
     Decoder decoder;
-    const auto instruction = decoder.decode(0x0000U);
+    const auto instruction = decoder.decode(0x2000U);
 
     REQUIRE(instruction == nullptr);
 }
-

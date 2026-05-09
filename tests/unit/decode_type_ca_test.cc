@@ -105,7 +105,7 @@ TEST_CASE("Decoder returns nullptr for another reserved C.A funct2 combination")
 
 TEST_CASE("Decoder does not decode non-CA compressed instructions as C.A") {
     Decoder decoder;
-    const auto instruction = decoder.decode(0x0000U);
+    const auto instruction = decoder.decode(0x2000U);
 
     REQUIRE(instruction == nullptr);
 }
