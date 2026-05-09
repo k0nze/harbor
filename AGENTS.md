@@ -19,6 +19,23 @@ In the first step of the implementation floating point should not be used.
 * `apps` contains examples of how to use the instruction set simulator
 * `build` contains the build output generated with `cmake` and `ninja`
 
+## Core And State Separation
+
+* `include/rviss/state` and `src/state` contain architectural state interfaces and implementations
+* `state` is for persistent machine state that instructions observe or modify, such as registers, PC, CSRs, memory access primitives, trap state, and atomic reservation state
+* `include/rviss/core` and `src/core` contain simulator engine logic
+* `core` is for fetch, decode, dispatch, stepping, and other orchestration that operates on an architectural state but is not itself architectural state
+* If a component represents machine state, place it under `state`
+* If a component drives or interprets execution using that state, place it under `core`
+
+## Documentation
+
+* Public API comments should use Doxygen-compatible doc strings
+* Prefer documenting declarations in public headers under `include/rviss` instead of repeating the same documentation in source files
+* Document interface contracts and architectural behavior, not implementation trivia
+* Use Doxygen tags such as `@brief`, `@param`, `@return`, and `@note` when they add clarity
+* When a method has architectural constraints or side effects, document them explicitly
+
 ## Build
 
 From the project root:

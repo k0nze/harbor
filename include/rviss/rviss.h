@@ -153,5 +153,6 @@
 #include "rviss/isa/wfi.h"
 #include "rviss/isa/xor.h"
 #include "rviss/isa/xori.h"
+#include "rviss/state/architectural_state.h"
 
 #endif

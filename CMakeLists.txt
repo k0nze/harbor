@@ -175,6 +175,7 @@ add_library(rviss
     src/isa/wfi.cc
     src/isa/xor.cc
     src/isa/xori.cc
+    src/state/architectural_state.cc
 )
 
 target_include_directories(rviss
@@ -218,6 +219,7 @@ if(BUILD_TESTING)
         tests/unit/decode_type_r_test.cc
         tests/unit/decode_type_s_test.cc
         tests/unit/decode_type_u_test.cc
+        tests/unit/architectural_state_test.cc
         tests/unit/instruction_type_amo_test.cc
         tests/unit/instruction_type_b_test.cc
         tests/unit/instruction_type_ca_test.cc
