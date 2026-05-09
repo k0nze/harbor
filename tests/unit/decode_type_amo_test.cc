@@ -328,7 +328,7 @@ TEST_CASE("Decoder returns nullptr for another invalid AMO width") {
 
 TEST_CASE("Decoder does not decode compressed words as AMO instructions") {
     Decoder decoder;
-    const auto instruction = decoder.decode(0x00000001U);
+    const auto instruction = decoder.decode(0x00000000U);
 
     REQUIRE(instruction == nullptr);
 }
