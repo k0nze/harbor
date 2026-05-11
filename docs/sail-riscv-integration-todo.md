@@ -15,12 +15,12 @@ into Harbor and eventually connect its platform behavior to SystemC models.
 
 ## 2. Build Sail RISC-V From Harbor
 
-- [ ] Reintroduce `external/sail-riscv` into the Harbor CMake build after the Sail compiler path is known.
-- [ ] Set `SAIL_BIN` to Harbor's installed Sail compiler.
-- [ ] Disable unnecessary Sail RISC-V test suites by default for normal Harbor development.
-- [ ] Add a Harbor-level `harbor_riscv_model` target that depends on Sail RISC-V's `riscv_model` library.
-- [ ] Build `harbor_riscv_model` from the Harbor repository.
-- [ ] Verify that `sail_riscv_model.cpp` and `sail_riscv_model.h` are generated in the Harbor build tree.
+- [x] Reintroduce `external/sail-riscv` into the Harbor CMake build after the Sail compiler path is known.
+- [x] Set `SAIL_BIN` to Harbor's installed Sail compiler.
+- [x] Disable unnecessary Sail RISC-V test suites by default for normal Harbor development.
+- [x] Add a Harbor-level `harbor_riscv_model` target that depends on Sail RISC-V's `riscv_model` library.
+- [x] Build `harbor_riscv_model` from the Harbor repository.
+- [x] Verify that `sail_riscv_model.cpp` and `sail_riscv_model.h` are generated in the Harbor build tree.
 
 ## 3. Minimal Harbor Wrapper
 

@@ -40,6 +40,9 @@ Optionally set a custom Sail installation prefix:
 cmake -B build -DHARBOR_SAIL_INSTALL_PREFIX=/path/to/sail-prefix
 ```
 
+If this option is omitted, Harbor installs Sail into `toolchain/sail` inside the
+repository.
+
 Build the Sail compiler:
 
 ```bash
@@ -57,6 +60,14 @@ Check that the Sail installation was successful:
 ```bash
 toolchain/sail/bin/sail --version
 ```
+
+Build the Sail RISC-V model library:
+
+```bash
+cmake --build build --target harbor_riscv_model
+```
+
+The first build may download Sail RISC-V CMake dependencies into the build tree.
 
 ## Helpful links:
 
