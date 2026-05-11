@@ -1,8 +1,44 @@
 # Harbor
 
-## Project Info
+## Setup
 
-* Boilerplate has been generated using GenAI
+### macOS
+
+```bash
+brew install cmake gmp z3 pkgconf dune opam ocaml
+```
+
+### General
+
+Initialize opam and create a project switch:
+
+```bash
+opam init
+opam switch create harbor 4.14.2
+eval $(opam env --switch=harbor)
+```
+
+Install Sail’s OCaml dependencies from the Sail submodule:
+
+```bash
+pushd external/sail
+opam install . --deps-only
+opam install menhir.20240715
+popd
+```
+
+Reconfigure Harbor with the opam environment active:
+
+```bash
+eval $(opam env --switch=harbor)
+cmake -B build -G Ninja -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+```
+
+Build the Sail compiler:
+
+```bash
+cmake --build build --target harbor_sail_compiler
+```
 
 ## Helpful links:
 
