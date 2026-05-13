@@ -24,6 +24,19 @@ Prefer a pragmatic split of responsibilities:
 * Formal ISA reference models such as Sail may still be useful later for
   correctness checks, but should not drive the initial platform architecture.
 
+## Architecture-Neutral Objective
+
+Harbor's SystemC/TLM-facing interfaces should be architecture-neutral where
+practical. Model generic concepts such as MMIO transactions, physical
+addresses, access sizes, response status, interrupts, reset, and estimated
+latency in Harbor-owned interfaces.
+
+Keep architecture and machine details in dedicated adapters. RISC-V-specific
+concepts such as OpenSBI, PLIC, CLINT, APLIC, IMSIC, and RISC-V `virt` memory
+maps should not leak into generic SystemC interfaces. Arm-specific concepts
+such as GIC, TF-A, EDK2, and Arm `virt` memory maps should be handled the same
+way.
+
 ## Repository Structure
 
 The repository is intentionally minimal after removing the previous Sail-based
@@ -79,4 +92,3 @@ Public API comments should use Doxygen-compatible doc strings.
   add clarity.
 * When a method has architectural constraints, timing assumptions, ownership
   requirements, or side effects, document them explicitly.
-
