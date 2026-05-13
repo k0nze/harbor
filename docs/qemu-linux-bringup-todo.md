@@ -7,34 +7,34 @@ integration.
 
 ## 1. Host Tool Setup
 
-- [ ] Decide whether Harbor uses the system QEMU package first or builds QEMU from source.
-- [ ] Document the required macOS packages for QEMU, RISC-V cross compilation, device trees, and build tooling.
-- [ ] Verify `qemu-system-riscv64` is available and record its version.
-- [ ] Verify the RISC-V bare-metal compiler is available and record its version.
-- [ ] Add a minimal top-level CMake project after the repository reset.
-- [ ] Add CMake detection for QEMU and the RISC-V bare-metal toolchain.
+- [x] Decide whether Harbor uses the system QEMU package first or builds QEMU from source.
+- [x] Document the required macOS packages for QEMU, RISC-V cross compilation, device trees, and build tooling.
+- [x] Verify `qemu-system-riscv64` is available and record its version.
+- [x] Verify the RISC-V bare-metal compiler is available and record its version.
+- [x] Add a minimal top-level CMake project after the repository reset.
+- [x] Add CMake detection for QEMU and the RISC-V bare-metal toolchain.
 
 ## 2. Repository Structure
 
-- [ ] Create `examples/baremetal` for Harbor-owned bare-metal programs.
+- [x] Create `examples/riscv/minimal` for the first Harbor-owned RISC-V bare-metal program.
 - [ ] Create `examples/linux` or `images/linux` for Linux boot helper scripts and generated image notes.
 - [ ] Create `docs` notes for QEMU machine choices, boot commands, and integration decisions.
 - [ ] Keep generated images, downloaded sources, and build artifacts out of Git.
 
 ## 3. Bare-Metal Examples On QEMU
 
-- [ ] Add a minimal RV64 bare-metal assembly program that exits through a QEMU-supported mechanism.
-- [ ] Add a linker script for the selected QEMU RISC-V machine memory map.
+- [x] Add a minimal RV64 bare-metal assembly program that exits through a QEMU-supported mechanism.
+- [x] Add a linker script for the selected QEMU RISC-V machine memory map.
 - [ ] Add a C runtime startup file for C bare-metal examples.
 - [ ] Add a minimal C hello-world program.
-- [ ] Add CMake targets to build the bare-metal ELFs.
-- [ ] Add CMake or script targets to run the bare-metal ELFs on QEMU.
+- [x] Add CMake targets to build the bare-metal ELFs.
+- [x] Add CMake or script targets to run the bare-metal ELFs on QEMU.
 - [ ] Document equivalent direct compiler and QEMU commands for users of other build systems.
-- [ ] Record expected output and exit behavior.
+- [x] Record expected output and exit behavior.
 
 ## 4. QEMU Machine And Boot Contract
 
-- [ ] Choose the first QEMU machine, likely `virt`.
+- [x] Choose the first QEMU machine, likely `virt`.
 - [ ] Document the default RAM base, UART, CLINT, PLIC, and virtio devices for that machine.
 - [ ] Decide whether the first Linux boot uses QEMU-provided OpenSBI or an explicit firmware image.
 - [ ] Decide whether the first boot uses a kernel `Image`, an ELF, or a firmware payload.
@@ -67,4 +67,3 @@ integration.
 - [ ] Should the first QEMU/SystemC bridge be in-process or process-separated?
 - [ ] How should estimated time be synchronized between QEMU execution and SystemC simulation time?
 - [ ] Which transactions should be timed first: MMIO, RAM, cache-line fills, or bus arbitration?
-
