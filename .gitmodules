@@ -1,6 +1,0 @@
-[submodule "external/sail-riscv"]
-	path = external/sail-riscv
-	url = https://github.com/riscv/sail-riscv
-[submodule "external/sail"]
-	path = external/sail
-	url = https://github.com/rems-project/sail/
