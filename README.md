@@ -5,7 +5,16 @@
 ### macOS
 
 ```bash
-brew install cmake gmp z3 pkgconf dune opam ocaml riscv64-elf-gcc
+brew install cmake gmp z3 pkgconf dune opam ocaml riscv64-elf-gcc dtc curl gnu-tar make
+```
+
+Put Homebrew's GNU tools before the default macOS tools when using the upstream
+Sail RISC-V Linux boot Makefile. The upstream Makefile requires GNU Make 4.0 or
+newer and uses `tar --touch`, which BSD tar does not support:
+
+```bash
+export PATH="$(brew --prefix make)/libexec/gnubin:$PATH"
+export PATH="$(brew --prefix gnu-tar)/libexec/gnubin:$PATH"
 ```
 
 ### General
@@ -127,6 +136,50 @@ The current C hello example can be built and run with:
 cmake --build build --target harbor_baremetal_hello
 cmake --build build --target harbor_run_baremetal_hello
 ```
+
+## Run Linux on Sail RISC-V Emulator
+
+Build the standalone Sail RISC-V simulator if it is not already built:
+
+```bash
+cmake --build build/sail-riscv --target sail_riscv_sim
+```
+
+Build the upstream OpenSBI + Linux payload:
+
+```bash
+make -C external/sail-riscv/os-boot/linux -j4
+```
+
+This downloads the upstream boot dependencies into
+`external/sail-riscv/os-boot/linux/downloads` and creates the bootable ELF:
+
+```bash
+external/sail-riscv/os-boot/linux/build/fw_payload.elf
+```
+
+Run the image with Harbor's Sail RISC-V simulator build:
+
+```bash
+make -C external/sail-riscv/os-boot/linux sail \
+  SAIL_SIM="$PWD/build/sail-riscv/c_emulator/sail_riscv_sim"
+```
+
+For a shorter first run, override the instruction limit:
+
+```bash
+make -C external/sail-riscv/os-boot/linux sail \
+  SAIL_SIM="$PWD/build/sail-riscv/c_emulator/sail_riscv_sim" \
+  INSTRUCTION_LIMIT=1000000
+```
+
+The run target generates a device tree from the emulator, compiles it to
+`external/sail-riscv/os-boot/linux/build/sail.dtb`, and passes it to the
+emulator with `--device-tree-blob`.
+
+Expected behavior: OpenSBI should print its banner first, then Linux should
+start booting. The upstream image currently does not include a userspace `init`,
+so a full run eventually fails when Linux cannot start init.
 
 ## Helpful links:
 
