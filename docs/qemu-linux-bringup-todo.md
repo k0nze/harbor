@@ -25,11 +25,11 @@ integration.
 
 - [x] Add a minimal RV64 bare-metal assembly program that exits through a QEMU-supported mechanism.
 - [x] Add a linker script for the selected QEMU RISC-V machine memory map.
-- [ ] Add a C runtime startup file for C bare-metal examples.
-- [ ] Add a minimal C hello-world program.
+- [x] Add a C runtime startup file for C bare-metal examples.
+- [x] Add a minimal C hello-world program.
 - [x] Add CMake targets to build the bare-metal ELFs.
-- [x] Add CMake or script targets to run the bare-metal ELFs on QEMU.
-- [ ] Document equivalent direct compiler and QEMU commands for users of other build systems.
+- [x] Add scripts to run the bare-metal ELFs on QEMU.
+- [x] Document equivalent direct compiler and QEMU commands for users of other build systems.
 - [x] Record expected output and exit behavior.
 
 ## 4. QEMU Machine And Boot Contract
