@@ -17,9 +17,9 @@ integration.
 ## 2. Repository Structure
 
 - [x] Create `examples/riscv/minimal` for the first Harbor-owned RISC-V bare-metal program.
-- [ ] Create `examples/linux` or `images/linux` for Linux boot helper scripts and generated image notes.
+- [x] Create `examples/linux` or `images/linux` for Linux boot helper scripts and generated image notes.
 - [ ] Create `docs` notes for QEMU machine choices, boot commands, and integration decisions.
-- [ ] Keep generated images, downloaded sources, and build artifacts out of Git.
+- [x] Keep generated images, downloaded sources, and build artifacts out of Git.
 
 ## 3. Bare-Metal Examples On QEMU
 
@@ -40,18 +40,37 @@ integration.
 - [ ] Decide whether the first boot uses a kernel `Image`, an ELF, or a firmware payload.
 - [ ] Decide how the initial device tree is provided, either QEMU-generated or Harbor-owned.
 
-## 5. Linux Boot On QEMU
+## 5. Linux Phase 1: Buildroot Baseline
 
-- [ ] Choose the first Linux image source, such as a prebuilt distro image, Buildroot, or a locally built kernel.
-- [ ] Document the host tools needed to build or fetch that Linux image.
-- [ ] Add a reproducible flow to obtain or build the kernel image.
-- [ ] Add a reproducible flow to obtain or build a root filesystem.
-- [ ] Add a QEMU command that boots Linux to a console.
+- [ ] Use Buildroot as the first controlled Linux image source.
+- [ ] Document the host tools needed to build Buildroot images.
+- [ ] Add a reproducible flow to obtain or build a minimal RV64 Buildroot image.
+- [ ] Build a small kernel, BusyBox userspace, and initramfs or root filesystem.
+- [ ] Add a QEMU command that boots the Buildroot image to a console.
 - [ ] Add a shorter smoke boot command for quick validation.
 - [ ] Record the expected boot log milestones, including OpenSBI, kernel start, rootfs mount, and shell or init.
+- [ ] Add a small userspace test program that can later access a Harbor-provided MMIO device.
 - [ ] Document cleanup rules for generated images and downloads.
 
-## 6. First SystemC/TLM Integration Plan
+## 6. Linux Phase 2: Real Distro Evaluation
+
+- [ ] Choose the first real distro image to evaluate, such as Debian, Fedora, Ubuntu, or Alpine.
+- [ ] Document how to obtain or build that distro image for RISC-V and, later, Arm.
+- [ ] Add a QEMU command that boots the distro image to a login shell or serial console.
+- [ ] Document storage, root filesystem, and kernel command-line assumptions.
+- [ ] Verify common userspace services or workloads relevant to peripheral evaluation.
+- [ ] Reuse the same future Harbor/QEMU peripheral path that was validated with Buildroot.
+- [ ] Record boot time, image size, and runtime overhead compared with the Buildroot baseline.
+
+## 7. Linux Phase 3: Optional Yocto/Product-Style Images
+
+- [ ] Decide whether Harbor needs Yocto after Buildroot and real distro flows are working.
+- [ ] If needed, choose a Yocto release and board/machine configuration.
+- [ ] Document the Yocto layer strategy for Harbor-specific devices or tests.
+- [ ] Add a reproducible Yocto image build flow only if product-style image generation is required.
+- [ ] Keep Yocto optional so it does not block fast QEMU/SystemC iteration.
+
+## 8. First SystemC/TLM Integration Plan
 
 - [ ] Identify the smallest QEMU-to-Harbor boundary to prototype, such as a custom MMIO device.
 - [ ] Decide whether to start with an in-process QEMU device, a remote-port style bridge, or another IPC bridge.
@@ -63,7 +82,8 @@ integration.
 ## Open Design Questions
 
 - [ ] Should Harbor depend on a packaged QEMU first, or vendor/build a specific QEMU revision?
-- [ ] Should the first Linux image be Buildroot, Debian/Fedora, or a custom minimal initramfs?
+- [ ] Which real distro should Harbor evaluate first after the Buildroot baseline?
+- [ ] Does Harbor need Yocto at all, or are Buildroot plus real distro images sufficient?
 - [ ] Should the first QEMU/SystemC bridge be in-process or process-separated?
 - [ ] How should estimated time be synchronized between QEMU execution and SystemC simulation time?
 - [ ] Which transactions should be timed first: MMIO, RAM, cache-line fills, or bus arbitration?

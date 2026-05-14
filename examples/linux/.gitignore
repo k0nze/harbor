@@ -1,0 +1,18 @@
+# Generated Linux images and boot artifacts.
+*.dtb
+*.elf
+*.img
+*.itb
+*.log
+*.qcow2
+*.raw
+Image
+rootfs.*
+vmlinux
+
+# Local downloads or extracted sources.
+downloads/
+sources/
+output/
+build/
+
