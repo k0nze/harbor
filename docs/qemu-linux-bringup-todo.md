@@ -18,7 +18,7 @@ integration.
 
 - [x] Create `examples/riscv/minimal` for the first Harbor-owned RISC-V bare-metal program.
 - [x] Create `examples/linux` or `images/linux` for Linux boot helper scripts and generated image notes.
-- [ ] Create `docs` notes for QEMU machine choices, boot commands, and integration decisions.
+- [x] Create `docs` notes for QEMU machine choices, boot commands, and integration decisions.
 - [x] Keep generated images, downloaded sources, and build artifacts out of Git.
 
 ## 3. Bare-Metal Examples On QEMU
@@ -35,10 +35,10 @@ integration.
 ## 4. QEMU Machine And Boot Contract
 
 - [x] Choose the first QEMU machine, likely `virt`.
-- [ ] Document the default RAM base, UART, CLINT, PLIC, and virtio devices for that machine.
-- [ ] Decide whether the first Linux boot uses QEMU-provided OpenSBI or an explicit firmware image.
-- [ ] Decide whether the first boot uses a kernel `Image`, an ELF, or a firmware payload.
-- [ ] Decide how the initial device tree is provided, either QEMU-generated or Harbor-owned.
+- [x] Document the default RAM base, UART, CLINT, PLIC, and virtio devices for that machine.
+- [x] Decide whether the first Linux boot uses QEMU-provided OpenSBI or an explicit firmware image.
+- [x] Decide whether the first boot uses a kernel `Image`, an ELF, or a firmware payload.
+- [x] Decide how the initial device tree is provided, either QEMU-generated or Harbor-owned.
 
 ## 5. Linux Phase 1: Buildroot Baseline
 
