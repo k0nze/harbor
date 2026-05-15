@@ -12,7 +12,11 @@ Expected future layout:
 examples/linux/
   buildroot/
     README.md
-    run-riscv64-virt.sh
+    buildroot.version
+    riscv64_qemu_virt_defconfig
+    fetch.sh
+    build.sh
+    run.sh
   distro/
     README.md
 ```
@@ -20,4 +24,3 @@ examples/linux/
 Use this directory for small scripts and documentation only. Large generated
 artifacts belong under `build/`, `.buildroot/`, `images/`, or another ignored
 output directory.
-

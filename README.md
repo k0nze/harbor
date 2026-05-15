@@ -11,11 +11,29 @@ brew install \
   qemu \
   systemc \
   riscv64-elf-gcc \
+  bash \
+  gcc@12 \
+  coreutils \
   dtc \
+  findutils \
+  gpatch \
+  util-linux \
   make \
   gnu-tar \
   curl \
   xz
+```
+
+Use Homebrew's GNU tools before the default macOS tools:
+
+```bash
+export PATH="$(brew --prefix make)/libexec/gnubin:$PATH"
+export PATH="$(brew --prefix bash)/bin:$PATH"
+export PATH="$(brew --prefix coreutils)/libexec/gnubin:$PATH"
+export PATH="$(brew --prefix findutils)/libexec/gnubin:$PATH"
+export PATH="$(brew --prefix gpatch)/libexec/gnubin:$PATH"
+export PATH="$(brew --prefix util-linux)/bin:$PATH"
+export PATH="$(brew --prefix util-linux)/libexec/gnubin:$PATH"
 ```
 
 ## RISC-V Assembly Bare-Metal Example
@@ -118,3 +136,24 @@ tests/integration/run-riscv-examples.sh
 
 The script configures CMake, builds the assembly and C ELFs, and runs both
 examples on QEMU.
+
+## Buildroot Linux Baseline
+
+The first controlled Linux baseline for QEMU `virt` lives under:
+
+```text
+examples/linux/buildroot
+```
+
+Start with:
+
+```bash
+examples/linux/buildroot/fetch.sh
+examples/linux/buildroot/build.sh
+examples/linux/buildroot/run.sh
+```
+
+The fetch and build steps download external sources and can take a while.
+Use a Linux host or Linux container for the Buildroot build. Native macOS is
+useful for the QEMU bare-metal examples, but Buildroot 2025.02 still assumes
+Linux host conventions in parts of its autotools package flow.

@@ -43,15 +43,15 @@ integration.
 
 ## 5. Linux Phase 1: Buildroot Baseline
 
-- [ ] Use Buildroot as the first controlled Linux image source.
-- [ ] Document the host tools needed to build Buildroot images.
-- [ ] Add a reproducible flow to obtain or build a minimal RV64 Buildroot image.
+- [x] Use Buildroot as the first controlled Linux image source.
+- [x] Document the host tools needed to build Buildroot images.
+- [x] Add a reproducible flow to obtain or build a minimal RV64 Buildroot image.
 - [ ] Build a small kernel, BusyBox userspace, and initramfs or root filesystem.
-- [ ] Add a QEMU command that boots the Buildroot image to a console.
+- [x] Add a QEMU command that boots the Buildroot image to a console.
 - [ ] Add a shorter smoke boot command for quick validation.
 - [ ] Record the expected boot log milestones, including OpenSBI, kernel start, rootfs mount, and shell or init.
 - [ ] Add a small userspace test program that can later access a Harbor-provided MMIO device.
-- [ ] Document cleanup rules for generated images and downloads.
+- [x] Document cleanup rules for generated images and downloads.
 
 ## 6. Linux Phase 2: Real Distro Evaluation
 
