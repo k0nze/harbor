@@ -23,6 +23,8 @@ exec "${qemu}" \
   -m 512M \
   -nographic \
   -bios default \
+  -netdev user,id=net0 \
+  -device virtio-net-device,netdev=net0 \
   -kernel "${kernel}" \
   -initrd "${rootfs}" \
   -append "console=ttyS0"

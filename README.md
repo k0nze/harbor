@@ -123,3 +123,7 @@ Use the shared Harbor example container for the Buildroot fetch and build
 steps. Native macOS is still useful for QEMU execution, but Buildroot setup
 and compilation now run inside the container using Docker volumes for the
 write-heavy source and output trees.
+
+The Buildroot image expects guest networking. The QEMU run script attaches a
+virtio network device backed by QEMU user-mode networking, and Buildroot brings
+up `eth0` with DHCP during boot.

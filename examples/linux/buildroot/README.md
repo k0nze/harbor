@@ -61,13 +61,16 @@ examples/linux/buildroot/run.sh
 ```
 
 The run script uses QEMU's RISC-V `virt` machine, QEMU-provided OpenSBI, the
-Buildroot kernel `Image`, and a CPIO initramfs for the root filesystem.
+Buildroot kernel `Image`, a CPIO initramfs for the root filesystem, and QEMU
+user-mode networking through a virtio network device. Buildroot configures
+`eth0` with DHCP during boot.
 
 Expected boot milestones:
 
 - QEMU starts OpenSBI.
 - Linux prints its boot log on `ttyS0`.
 - The initramfs is unpacked as the root filesystem.
+- `eth0` is configured through QEMU user-mode DHCP.
 - BusyBox init starts and provides the baseline userspace.
 
 ## Overrides
