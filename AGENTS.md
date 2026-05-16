@@ -90,11 +90,15 @@ Use `HARBOR_EXAMPLES_DOCKER_IMAGE` when a workflow needs a different image tag.
 
 Keep host and container responsibilities separate:
 
-* Docker builds target artifacts such as RISC-V bare-metal ELFs and Buildroot
-  Linux images.
+* Docker fetches/builds target artifacts such as RISC-V bare-metal ELFs,
+  Buildroot sources, and Buildroot Linux images.
 * The host runs QEMU and other interactive or integration processes.
 * Harbor core libraries should remain buildable on the host unless the project
   explicitly decides otherwise.
+
+Use Docker volumes for write-heavy cross-compilation state instead of writing
+large build trees through macOS bind mounts. Copy final artifacts back into
+`build/` for host-side run scripts.
 
 For RISC-V bare-metal examples, each example target should have its own build
 script next to the example, such as `examples/riscv/minimal/build.sh` and

@@ -22,6 +22,8 @@ docker build \
 
 All cross-compilation scripts use this image by default. Override it with
 `HARBOR_EXAMPLES_DOCKER_IMAGE` if you build the image under a different tag.
+The scripts keep compiler and Buildroot working state in Docker volumes and
+copy final artifacts back into `build/`.
 
 ## RISC-V Assembly Bare-Metal Example
 
@@ -98,6 +100,7 @@ examples/linux/buildroot/run.sh
 ```
 
 The fetch and build steps download external sources and can take a while.
-Use the shared Harbor example container for the Buildroot build. Native macOS
-is still useful for QEMU execution, but the build itself now runs inside the
-container.
+Use the shared Harbor example container for the Buildroot fetch and build
+steps. Native macOS is still useful for QEMU execution, but Buildroot setup
+and compilation now run inside the container using Docker volumes for the
+write-heavy source and output trees.
