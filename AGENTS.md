@@ -64,9 +64,15 @@ removed prototype.
 When adding QEMU/SystemC integration, keep build targets small and inspectable:
 
 * one target to build Harbor libraries,
+* one target or explicit script to build the Harbor-enabled QEMU binary,
 * one target to build a minimal example,
 * run behavior should live in explicit scripts next to the examples or tests,
   not hidden behind CMake targets.
+
+Packaged QEMU is acceptable for baseline Linux and bare-metal bring-up. For
+Harbor-specific MMIO devices, QEMU should be added as an explicit submodule
+under `external/qemu` and built from source natively on the host. Do not build
+QEMU inside the examples Docker image.
 
 ## Docker-Based Cross Compilation
 
@@ -92,7 +98,7 @@ Keep host and container responsibilities separate:
 
 * Docker fetches/builds target artifacts such as RISC-V bare-metal ELFs,
   Buildroot sources, and Buildroot Linux images.
-* The host runs QEMU and other interactive or integration processes.
+* The host builds and runs QEMU and other interactive or integration processes.
 * Harbor core libraries should remain buildable on the host unless the project
   explicitly decides otherwise.
 
@@ -122,7 +128,7 @@ Current checks:
 * `tests/integration/boot-buildroot-linux.sh` boots existing Buildroot
   artifacts, verifies that the root filesystem contains `mmio-test`, waits
   until Linux starts `/init`, `eth0` receives a DHCP lease, and the guest runs
-  `mmio-test --dry-run 0x10010000`, then terminates QEMU.
+  `mmio-test register-file --dry-run`, then terminates QEMU.
 * `tests/cleanup.sh` removes generated build artifacts, downloaded Buildroot
   sources, and the prepared example builder image.
 

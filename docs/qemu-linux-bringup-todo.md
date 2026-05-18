@@ -75,8 +75,12 @@ integration.
 ## 8. First SystemC/TLM Integration Plan
 
 - [ ] Identify the smallest QEMU-to-Harbor boundary to prototype, such as a custom MMIO device.
-- [ ] Decide whether to start with an in-process QEMU device, a remote-port style bridge, or another IPC bridge.
 - [x] Define the first Harbor-side MMIO test model: a 16-entry 32-bit register file.
+- [x] Decide to start with a custom QEMU build so Harbor can add a QEMU-visible MMIO device.
+- [ ] Add upstream QEMU as a Git submodule under `external/qemu`.
+- [ ] Add host-native QEMU build scripts or CMake integration that build only the required system targets first.
+- [ ] Keep QEMU build artifacts out of Git and outside Docker; Docker remains only for guest cross-compilation.
+- [ ] Decide whether the first QEMU/Harbor connection is a direct in-process device or a bridge that forwards to a Harbor process.
 - [ ] Define a Harbor transaction interface for MMIO reads and writes.
 - [ ] Add a QEMU-visible MMIO mapping for the minimal register file.
 - [ ] Add a trivial SystemC peripheral model that exposes one register.
@@ -85,7 +89,8 @@ integration.
 
 ## Open Design Questions
 
-- [ ] Should Harbor depend on a packaged QEMU first, or vendor/build a specific QEMU revision?
+- [x] Should Harbor depend on a packaged QEMU first, or vendor/build a specific QEMU revision?
+  Decision: packaged QEMU remains useful for baseline bring-up, but Harbor-specific MMIO integration requires QEMU as a submodule and a host-native QEMU build.
 - [ ] Which real distro should Harbor evaluate first after the Buildroot baseline?
 - [ ] Does Harbor need Yocto at all, or are Buildroot plus real distro images sufficient?
 - [ ] Should the first QEMU/SystemC bridge be in-process or process-separated?

@@ -38,7 +38,7 @@ echo "[riscv-minimal] Preparing Docker build volume"
 "${docker_cmd}" run --rm \
   -v "${build_volume}:/docker-build" \
   "${image_name}" \
-  sh -c "mkdir -p /docker-build/riscv && chown -R $(id -u):$(id -g) /docker-build"
+  sh -c "mkdir -p /docker-build/riscv && chown $(id -u):$(id -g) /docker-build /docker-build/riscv"
 
 echo "[riscv-minimal] Building in Docker image ${image_name}"
 "${docker_cmd}" run --rm \

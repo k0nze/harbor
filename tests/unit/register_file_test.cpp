@@ -53,6 +53,14 @@ void rejects_out_of_range_accesses()
     assert(!registers.read32(harbor::mmio::RegisterFile::AddressSpanBytes).has_value());
 }
 
+void exposes_expected_default_memory_map()
+{
+    static_assert(harbor::mmio::RegisterFile::DefaultBaseAddress == 0x10010000ULL);
+    static_assert(harbor::mmio::RegisterFile::RegisterCount == 16U);
+    static_assert(harbor::mmio::RegisterFile::RegisterWidthBytes == 4U);
+    static_assert(harbor::mmio::RegisterFile::AddressSpanBytes == 0x40U);
+}
+
 } // namespace
 
 int main()
@@ -62,5 +70,6 @@ int main()
     reset_clears_written_values();
     rejects_unaligned_accesses();
     rejects_out_of_range_accesses();
+    exposes_expected_default_memory_map();
     return 0;
 }

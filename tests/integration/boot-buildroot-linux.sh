@@ -59,7 +59,8 @@ while [ "${elapsed}" -lt "${linux_boot_timeout}" ]; do
     network_seen=1
   fi
 
-  if grep -q "dry-run address 0x10010000 width 32" "${linux_boot_log}" 2>/dev/null; then
+  if grep -q "register-file dry-run base 0x10010000 count 16 width 32 span 0x40" "${linux_boot_log}" 2>/dev/null &&
+    grep -q "register-file\\[15\\] address 0x1001003c width 32" "${linux_boot_log}" 2>/dev/null; then
     mmio_test_seen=1
   fi
 

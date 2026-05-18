@@ -43,7 +43,7 @@ if [ "${in_container}" != "1" ]; then
     -v "${source_volume}:/buildroot-source" \
     -v "${output_volume}:/buildroot-output" \
     "${image_name}" \
-    sh -c "mkdir -p /buildroot-source /buildroot-output && chown -R $(id -u):$(id -g) /buildroot-source /buildroot-output"
+    sh -c "mkdir -p /buildroot-source /buildroot-output && chown $(id -u):$(id -g) /buildroot-source /buildroot-output"
 
   echo "[buildroot] Building in Docker image ${image_name}"
   "${docker_cmd}" run --rm \

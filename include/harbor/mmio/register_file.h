@@ -1,6 +1,8 @@
 #ifndef HARBOR_MMIO_REGISTER_FILE_H
 #define HARBOR_MMIO_REGISTER_FILE_H
 
+#include "harbor/mmio/register_file_map.h"
+
 #include <array>
 #include <cstddef>
 #include <cstdint>
@@ -21,9 +23,11 @@ namespace harbor::mmio {
  */
 class RegisterFile {
 public:
-    static constexpr std::size_t RegisterCount = 16;
-    static constexpr std::size_t RegisterWidthBytes = 4;
-    static constexpr std::size_t AddressSpanBytes = RegisterCount * RegisterWidthBytes;
+    static constexpr std::uint64_t DefaultBaseAddress = HARBOR_MMIO_REGISTER_FILE_BASE;
+    static constexpr std::size_t RegisterCount = HARBOR_MMIO_REGISTER_FILE_REGISTER_COUNT;
+    static constexpr std::size_t RegisterWidthBytes =
+        HARBOR_MMIO_REGISTER_FILE_REGISTER_WIDTH_BYTES;
+    static constexpr std::size_t AddressSpanBytes = HARBOR_MMIO_REGISTER_FILE_ADDRESS_SPAN_BYTES;
 
     /**
      * @brief Construct a register file with all registers reset to zero.

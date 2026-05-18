@@ -2,8 +2,8 @@
 
 case "$1" in
   start)
-    echo "Running Harbor mmio-test dry-run"
-    /usr/bin/mmio-test --dry-run 0x10010000
+    echo "Running Harbor register-file dry-run"
+    /usr/bin/mmio-test register-file --dry-run
     ;;
   stop|restart|reload)
     ;;

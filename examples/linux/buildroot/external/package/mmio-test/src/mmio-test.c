@@ -8,6 +8,8 @@
 #include <sys/mman.h>
 #include <unistd.h>
 
+#include "harbor/mmio/register_file_map.h"
+
 enum access_width {
     ACCESS_WIDTH_8 = 1,
     ACCESS_WIDTH_16 = 2,
@@ -22,11 +24,19 @@ static void print_usage(const char *program)
     printf("  %s --dry-run <address> [width]\n", program);
     printf("  %s read <address> [width]\n", program);
     printf("  %s write <address> <value> [width]\n", program);
+    printf("  %s register-file --dry-run\n", program);
+    printf("  %s register-file check\n", program);
     printf("\n");
     printf("Arguments:\n");
     printf("  address  Physical MMIO address, for example 0x10010000.\n");
     printf("  value    Integer value to write.\n");
     printf("  width    Access width in bits: 8, 16, 32, or 64. Defaults to 32.\n");
+    printf("\n");
+    printf("Register file:\n");
+    printf("  base     0x%" PRIx64 "\n", HARBOR_MMIO_REGISTER_FILE_BASE);
+    printf("  count    %u registers\n", HARBOR_MMIO_REGISTER_FILE_REGISTER_COUNT);
+    printf("  width    32 bits\n");
+    printf("  span     0x%x bytes\n", HARBOR_MMIO_REGISTER_FILE_ADDRESS_SPAN_BYTES);
 }
 
 static int parse_u64(const char *text, uint64_t *value)
@@ -182,6 +192,44 @@ static int map_and_access(const char *operation, uint64_t physical_address,
     return 0;
 }
 
+static uint64_t register_file_address(unsigned int index)
+{
+    return HARBOR_MMIO_REGISTER_FILE_BASE +
+           ((uint64_t)index * HARBOR_MMIO_REGISTER_FILE_REGISTER_WIDTH_BYTES);
+}
+
+static int register_file_dry_run(void)
+{
+    unsigned int index = 0;
+
+    printf("register-file dry-run base 0x%" PRIx64 " count %u width 32 span 0x%x\n",
+           HARBOR_MMIO_REGISTER_FILE_BASE, HARBOR_MMIO_REGISTER_FILE_REGISTER_COUNT,
+           HARBOR_MMIO_REGISTER_FILE_ADDRESS_SPAN_BYTES);
+
+    for (index = 0; index < HARBOR_MMIO_REGISTER_FILE_REGISTER_COUNT; ++index) {
+        printf("register-file[%02u] address 0x%" PRIx64 " width 32\n", index,
+               register_file_address(index));
+    }
+
+    return 0;
+}
+
+static int register_file_check(void)
+{
+    unsigned int index = 0;
+
+    for (index = 0; index < HARBOR_MMIO_REGISTER_FILE_REGISTER_COUNT; ++index) {
+        const uint64_t address = register_file_address(index);
+        const uint64_t value = UINT64_C(0xa5000000) | (uint64_t)index;
+
+        if (map_and_access("write", address, ACCESS_WIDTH_32, value) != 0) {
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
 int main(int argc, char **argv)
 {
     const char *operation = NULL;
@@ -195,6 +243,24 @@ int main(int argc, char **argv)
     }
 
     operation = argv[1];
+
+    if (strcmp(operation, "register-file") == 0) {
+        if (argc != 3) {
+            print_usage(argv[0]);
+            return 1;
+        }
+
+        if (strcmp(argv[2], "--dry-run") == 0) {
+            return register_file_dry_run();
+        }
+
+        if (strcmp(argv[2], "check") == 0) {
+            return register_file_check();
+        }
+
+        print_usage(argv[0]);
+        return 1;
+    }
 
     if (strcmp(operation, "--dry-run") == 0) {
         if (argc < 3 || argc > 4 || parse_u64(argv[2], &physical_address) != 0 ||

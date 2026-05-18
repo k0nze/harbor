@@ -33,6 +33,9 @@ The expected readback value is `0x12345678`.
 ## Current Implementation Boundary
 
 The Harbor-side model is implemented by `harbor::mmio::RegisterFile`.
+The shared memory-map constants are declared in
+`include/harbor/mmio/register_file_map.h` and are used by both the C++ model
+and the Buildroot guest `mmio-test` utility.
 
 This model does not yet make the registers visible to the guest. A QEMU device
 or bridge still needs to decode the guest physical address range and forward
