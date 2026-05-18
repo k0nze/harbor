@@ -140,3 +140,7 @@ mmio-test --dry-run 0x10010000
 
 During the integration boot check, the image runs that dry-run automatically
 from `/etc/init.d/S90mmio-test`.
+
+The first Harbor-side MMIO test model is a 16-entry, 32-bit register file. Its
+proposed guest physical test mapping is documented in
+`docs/minimal-mmio-register-file.md`.

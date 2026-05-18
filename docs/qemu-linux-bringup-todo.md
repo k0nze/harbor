@@ -76,7 +76,9 @@ integration.
 
 - [ ] Identify the smallest QEMU-to-Harbor boundary to prototype, such as a custom MMIO device.
 - [ ] Decide whether to start with an in-process QEMU device, a remote-port style bridge, or another IPC bridge.
+- [x] Define the first Harbor-side MMIO test model: a 16-entry 32-bit register file.
 - [ ] Define a Harbor transaction interface for MMIO reads and writes.
+- [ ] Add a QEMU-visible MMIO mapping for the minimal register file.
 - [ ] Add a trivial SystemC peripheral model that exposes one register.
 - [ ] Route a Linux or bare-metal access to that register through QEMU into the SystemC model.
 - [ ] Add basic timing annotation or counters only after functional access works.

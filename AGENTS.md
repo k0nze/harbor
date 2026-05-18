@@ -142,6 +142,8 @@ Prefer small, testable integration seams:
 * Define Harbor-owned interfaces before binding directly to QEMU internals.
 * Keep QEMU-specific adapter code separate from SystemC model code.
 * Treat MMIO and memory transactions as the first integration path.
+* Use the minimal 16-entry, 32-bit register file documented in
+  `docs/minimal-mmio-register-file.md` as the first guest-visible MMIO device.
 * Add timing annotation or synchronization only after functional transactions
   are working.
 * Document assumptions around blocking behavior, threading, and time

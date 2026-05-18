@@ -3,6 +3,9 @@ set -eu
 
 repo_root=$(CDPATH= cd -- "$(dirname -- "$0")/../.." && pwd)
 
+echo "[integration] Running Harbor unit tests"
+"${repo_root}/tests/unit/run.sh"
+
 echo "[integration] Running RISC-V bare-metal examples"
 "${repo_root}/tests/integration/run-riscv-examples.sh"
 
