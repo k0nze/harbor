@@ -5,7 +5,7 @@
 ### macOS
 
 ```bash
-brew install qemu
+brew install qemu ninja pkgconf glib pixman
 brew install --cask docker
 ```
 
@@ -149,3 +149,38 @@ Custom Harbor MMIO devices require a Harbor-enabled QEMU build. Packaged QEMU
 remains useful for the current baseline boot flow, but the next integration
 phase should add QEMU as `external/qemu` and build it natively on the host.
 Docker remains scoped to guest cross-compilation and Buildroot image creation.
+
+## Host-Native QEMU Build
+
+QEMU is vendored as a submodule under:
+
+```text
+external/qemu
+```
+
+Build the initial host-native `qemu-system-riscv64` binary:
+
+```bash
+git submodule update --init external/qemu
+./qemu-build.sh
+```
+
+The default build directory is:
+
+```text
+build/qemu/riscv64-softmmu
+```
+
+Run the Buildroot Linux baseline with the Harbor-built QEMU binary:
+
+```bash
+export PATH="$PWD/build/qemu/riscv64-softmmu:$PATH"
+examples/linux/buildroot/run.sh
+```
+
+The existing run scripts resolve `qemu-system-riscv64` through `PATH`, so the
+Harbor-built QEMU becomes the primary QEMU implementation for the current
+shell.
+
+Docker is not used for building QEMU. Docker remains scoped to guest
+cross-compilation and Buildroot image creation.

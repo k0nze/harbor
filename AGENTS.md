@@ -74,6 +74,11 @@ Harbor-specific MMIO devices, QEMU should be added as an explicit submodule
 under `external/qemu` and built from source natively on the host. Do not build
 QEMU inside the examples Docker image.
 
+Use `qemu-build.sh` for the initial host-native QEMU build. It should
+build only `riscv64-softmmu` until Harbor needs additional targets. Prefer
+putting `build/qemu/riscv64-softmmu` first in `PATH` and using the existing run
+scripts instead of adding duplicate QEMU run wrappers.
+
 ## Docker-Based Cross Compilation
 
 Cross compilation for guest artifacts should use the shared example builder
@@ -154,6 +159,12 @@ Prefer small, testable integration seams:
   are working.
 * Document assumptions around blocking behavior, threading, and time
   synchronization before relying on them.
+
+## Python
+
+* Run Python always in a virtual enviroment.
+* Install Python models always in a virtual enviroment.
+* The Python virtual enviroment is under `.venv`
 
 ## Documentation
 

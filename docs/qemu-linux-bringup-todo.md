@@ -77,8 +77,8 @@ integration.
 - [ ] Identify the smallest QEMU-to-Harbor boundary to prototype, such as a custom MMIO device.
 - [x] Define the first Harbor-side MMIO test model: a 16-entry 32-bit register file.
 - [x] Decide to start with a custom QEMU build so Harbor can add a QEMU-visible MMIO device.
-- [ ] Add upstream QEMU as a Git submodule under `external/qemu`.
-- [ ] Add host-native QEMU build scripts or CMake integration that build only the required system targets first.
+- [x] Add upstream QEMU as a Git submodule under `external/qemu`.
+- [x] Add host-native QEMU build scripts or CMake integration that build only the required system targets first.
 - [ ] Keep QEMU build artifacts out of Git and outside Docker; Docker remains only for guest cross-compilation.
 - [ ] Decide whether the first QEMU/Harbor connection is a direct in-process device or a bridge that forwards to a Harbor process.
 - [ ] Define a Harbor transaction interface for MMIO reads and writes.
