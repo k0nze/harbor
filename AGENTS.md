@@ -84,7 +84,7 @@ scripts instead of adding duplicate QEMU run wrappers.
 Cross compilation for guest artifacts should use the shared example builder
 image defined by `examples/Dockerfile`.
 
-The image is prepared explicitly by the user or CI:
+The image can be prepared explicitly by the user or CI:
 
 ```bash
 docker build \
@@ -96,6 +96,10 @@ docker build \
 Do not make per-example build scripts create or update this image implicitly.
 Those scripts should assume the prepared image exists and fail with a clear
 message when it does not.
+
+Integration scripts should call `tests/integration/ensure-examples-docker-image.sh`
+before running Docker-based cross-compilation steps. This keeps regression runs
+self-contained without hiding image creation inside per-example build scripts.
 
 Use `HARBOR_EXAMPLES_DOCKER_IMAGE` when a workflow needs a different image tag.
 
@@ -141,9 +145,8 @@ Use `tests/integration/run-riscv-examples.sh` for changes that affect CMake,
 RISC-V examples, QEMU run scripts, toolchain detection, linker scripts, or
 bare-metal runtime code.
 
-The integration script expects the shared example Docker image to exist. If a
-change affects cross-compilation tooling or Linux bring-up, run the documented
-`docker build` command first, then run the relevant integration script. Use
+The integration scripts prepare the shared example Docker image if it is
+missing. If a change affects cross-compilation tooling or Linux bring-up, use
 `tests/integration/run-all.sh` for full regression coverage.
 
 ## SystemC/QEMU Integration Guidance

@@ -25,6 +25,9 @@ All cross-compilation scripts use this image by default. Override it with
 The scripts keep compiler and Buildroot working state in Docker volumes and
 copy final artifacts back into `build/`.
 
+The integration scripts build the shared image automatically if it is missing.
+The per-example build scripts still expect the image to already exist.
+
 ## RISC-V Assembly Bare-Metal Example
 
 Build the example ELFs in Docker:
@@ -80,7 +83,8 @@ tests/integration/run-riscv-examples.sh
 ```
 
 The script builds the assembly and C ELFs in Docker, then runs both bare-metal
-examples on QEMU.
+examples on QEMU. If the shared Docker image is missing, the script builds it
+first.
 
 Build and run all current integration checks, including the Buildroot Linux
 baseline:
@@ -88,6 +92,9 @@ baseline:
 ```bash
 tests/integration/run-all.sh
 ```
+
+This also prepares the shared Docker image before the first cross-compilation
+step.
 
 The full integration script builds the bare-metal examples, builds the
 Buildroot Linux baseline, verifies that `mmio-test` is present in the root

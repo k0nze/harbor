@@ -31,16 +31,26 @@ insert_after_once() {
   local marker="$3"
   local block="$4"
   local tmp
+  local block_tmp
 
   if grep -Fq "${marker}" "${file}"; then
     return 0
   fi
 
   tmp=$(mktemp)
-  awk -v needle="${needle}" -v block="${block}" '
+  block_tmp=$(mktemp)
+  printf "%s\n" "${block}" >"${block_tmp}"
+
+  awk -v needle="${needle}" -v block_file="${block_tmp}" '
     { print }
-    index($0, needle) { print block }
+    index($0, needle) {
+      while ((getline line < block_file) > 0) {
+        print line
+      }
+      close(block_file)
+    }
   ' "${file}" >"${tmp}"
+  rm -f "${block_tmp}"
   mv "${tmp}" "${file}"
 
   if ! grep -Fq "${marker}" "${file}"; then
@@ -55,16 +65,26 @@ insert_before_once() {
   local marker="$3"
   local block="$4"
   local tmp
+  local block_tmp
 
   if grep -Fq "${marker}" "${file}"; then
     return 0
   fi
 
   tmp=$(mktemp)
-  awk -v needle="${needle}" -v block="${block}" '
-    index($0, needle) { print block }
+  block_tmp=$(mktemp)
+  printf "%s\n" "${block}" >"${block_tmp}"
+
+  awk -v needle="${needle}" -v block_file="${block_tmp}" '
+    index($0, needle) {
+      while ((getline line < block_file) > 0) {
+        print line
+      }
+      close(block_file)
+    }
     { print }
   ' "${file}" >"${tmp}"
+  rm -f "${block_tmp}"
   mv "${tmp}" "${file}"
 
   if ! grep -Fq "${marker}" "${file}"; then
