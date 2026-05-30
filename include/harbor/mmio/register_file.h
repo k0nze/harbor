@@ -25,17 +25,18 @@ class RegisterFile {
 public:
     static constexpr std::uint64_t DefaultBaseAddress = HARBOR_MMIO_REGISTER_FILE_BASE;
     static constexpr std::size_t RegisterCount = HARBOR_MMIO_REGISTER_FILE_REGISTER_COUNT;
-    static constexpr std::size_t RegisterWidthBytes =
-        HARBOR_MMIO_REGISTER_FILE_REGISTER_WIDTH_BYTES;
+    static constexpr std::size_t RegisterWidthBytes = HARBOR_MMIO_REGISTER_FILE_REGISTER_WIDTH_BYTES;
     static constexpr std::size_t AddressSpanBytes = HARBOR_MMIO_REGISTER_FILE_ADDRESS_SPAN_BYTES;
+    static constexpr std::uint32_t ConstantRegisterMask =
+        HARBOR_MMIO_REGISTER_FILE_CONSTANT_REGISTER_MASK;
 
     /**
-     * @brief Construct a register file with all registers reset to zero.
+     * @brief Construct a register file with all registers at reset values.
      */
     RegisterFile();
 
     /**
-     * @brief Reset all registers to zero.
+     * @brief Reset all registers to their configured reset values.
      */
     void reset();
 
@@ -65,6 +66,25 @@ public:
      * @return true for aligned offsets in the range [0, 64), false otherwise.
      */
     [[nodiscard]] static bool is_valid_register_offset(std::uint64_t offset);
+
+    /**
+     * @brief Return whether a register index is constant.
+     *
+     * Writes to constant registers are accepted by the register file but do
+     * not change the stored value.
+     *
+     * @param index Register index in the range [0, RegisterCount).
+     * @return true if the register is constant, false otherwise.
+     */
+    [[nodiscard]] static bool is_constant_register_index(std::size_t index);
+
+    /**
+     * @brief Return the reset value for a register index.
+     *
+     * @param index Register index in the range [0, RegisterCount).
+     * @return Constant reset value for the register, or 0 for invalid indices.
+     */
+    [[nodiscard]] static std::uint32_t reset_value_for_register_index(std::size_t index);
 
 private:
     std::array<std::uint32_t, RegisterCount> registers_{};

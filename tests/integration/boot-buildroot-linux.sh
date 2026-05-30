@@ -8,6 +8,7 @@ linux_boot_timeout="${LINUX_BOOT_TIMEOUT_SECONDS:-120}"
 output_dir="${BUILDROOT_OUTPUT_DIR:-${repo_root}/build/buildroot/riscv64-qemu-virt}"
 kernel="${output_dir}/images/Image"
 rootfs="${output_dir}/images/rootfs.cpio"
+harbor_qemu="${repo_root}/build/qemu/riscv64-softmmu/qemu-system-riscv64"
 
 if [ ! -f "${kernel}" ] || [ ! -f "${rootfs}" ]; then
   echo "Missing Buildroot artifacts under ${output_dir}/images" >&2
@@ -32,6 +33,10 @@ fi
 mkdir -p "${log_dir}"
 rm -f "${linux_boot_log}"
 
+if [ -z "${QEMU:-}" ] && [ -x "${harbor_qemu}" ]; then
+  export QEMU="${harbor_qemu}"
+fi
+
 echo "[integration] Starting QEMU for Buildroot Linux"
 "${repo_root}/examples/linux/buildroot/run.sh" >"${linux_boot_log}" 2>&1 &
 qemu_pid=$!
@@ -49,6 +54,32 @@ elapsed=0
 linux_init_seen=0
 network_seen=0
 mmio_test_seen=0
+mmio_write_count=0
+mmio_read_count=0
+last_printed_log_line=0
+
+print_new_mmio_output() {
+  if [ ! -f "${linux_boot_log}" ]; then
+    return
+  fi
+
+  line_count=$(wc -l <"${linux_boot_log}" | tr -d ' ')
+  if [ "${line_count}" -le "${last_printed_log_line}" ]; then
+    return
+  fi
+
+  start_line=$((last_printed_log_line + 1))
+  sed -n "${start_line},${line_count}p" "${linux_boot_log}" | awk '
+    /Running Harbor register-file check/ { print "[linux-mmio] " $0 }
+    /register-file write pass/ { print "[linux-mmio] " $0 }
+    /^write 0x100100/ { print "[linux-mmio] " $0 }
+    /register-file read pass/ { print "[linux-mmio] " $0 }
+    /^read 0x100100/ { print "[linux-mmio] " $0 }
+    /register-file check passed/ { print "[linux-mmio] " $0 }
+  '
+
+  last_printed_log_line="${line_count}"
+}
 
 while [ "${elapsed}" -lt "${linux_boot_timeout}" ]; do
   if grep -q "Run /init as init process" "${linux_boot_log}" 2>/dev/null; then
@@ -59,8 +90,18 @@ while [ "${elapsed}" -lt "${linux_boot_timeout}" ]; do
     network_seen=1
   fi
 
-  if grep -q "register-file dry-run base 0x10010000 count 16 width 32 span 0x40" "${linux_boot_log}" 2>/dev/null &&
-    grep -q "register-file\\[15\\] address 0x1001003c width 32" "${linux_boot_log}" 2>/dev/null; then
+  mmio_write_count=$(grep -c "^write 0x100100" "${linux_boot_log}" 2>/dev/null || true)
+  mmio_read_count=$(grep -c "^read 0x100100" "${linux_boot_log}" 2>/dev/null || true)
+  print_new_mmio_output
+
+  if grep -q "Running Harbor register-file check" "${linux_boot_log}" 2>/dev/null &&
+    grep -q "register-file write pass" "${linux_boot_log}" 2>/dev/null &&
+    grep -q "register-file read pass" "${linux_boot_log}" 2>/dev/null &&
+    grep -q "write 0x1001003c width 32 <- 0xa500000f" "${linux_boot_log}" 2>/dev/null &&
+    grep -q "read 0x1001003c width 32 -> 0xa500000f" "${linux_boot_log}" 2>/dev/null &&
+    grep -q "register-file check passed" "${linux_boot_log}" 2>/dev/null &&
+    [ "${mmio_write_count}" -eq 16 ] &&
+    [ "${mmio_read_count}" -eq 16 ]; then
     mmio_test_seen=1
   fi
 

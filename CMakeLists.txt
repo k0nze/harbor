@@ -25,6 +25,23 @@ target_include_directories(harbor
     "${CMAKE_CURRENT_SOURCE_DIR}/include"
 )
 
+add_library(harbor_qemu_adapter STATIC
+  src/qemu/mmio_adapter.cpp
+)
+
+set_target_properties(harbor_qemu_adapter
+  PROPERTIES
+    POSITION_INDEPENDENT_CODE ON
+)
+
+target_compile_features(harbor_qemu_adapter
+  PUBLIC cxx_std_17
+)
+
+target_link_libraries(harbor_qemu_adapter
+  PUBLIC harbor
+)
+
 if(HARBOR_BUILD_TESTS)
   enable_testing()
 

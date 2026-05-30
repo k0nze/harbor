@@ -5,6 +5,8 @@ repo_root=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 qemu_source_dir="${repo_root}/external/qemu"
 qemu_build_dir="${HARBOR_QEMU_BUILD_DIR:-${repo_root}/build/qemu/riscv64-softmmu}"
 qemu_prefix="${HARBOR_QEMU_INSTALL_PREFIX:-${repo_root}/build/qemu/install}"
+harbor_build_dir="${HARBOR_BUILD_DIR:-${repo_root}/build/harbor}"
+qemu_install_sources_script="${repo_root}/scripts/qemu-install-harbor-sources.sh"
 python="${HARBOR_PYTHON:-${repo_root}/.venv/bin/python}"
 
 if [ -n "${CC:-}" ] && ! command -v "${CC}" >/dev/null 2>&1; then
@@ -29,12 +31,62 @@ if [ ! -x "${python}" ]; then
   exit 1
 fi
 
+echo "[qemu] Building Harbor QEMU adapter"
+cmake -S "${repo_root}" -B "${harbor_build_dir}" \
+  -DHARBOR_BUILD_RISCV_EXAMPLES=OFF \
+  -DHARBOR_BUILD_TESTS=OFF \
+  -DCMAKE_POSITION_INDEPENDENT_CODE=ON
+cmake --build "${harbor_build_dir}" --target harbor_qemu_adapter
+
+harbor_core_lib="${harbor_build_dir}/libharbor.a"
+harbor_qemu_adapter_lib="${harbor_build_dir}/libharbor_qemu_adapter.a"
+
+if [ ! -f "${harbor_core_lib}" ] || [ ! -f "${harbor_qemu_adapter_lib}" ]; then
+  echo "Missing Harbor QEMU adapter libraries in ${harbor_build_dir}" >&2
+  exit 1
+fi
+
+case "$(uname -s)" in
+  Darwin)
+    harbor_cxx_runtime="-lc++"
+    ;;
+  *)
+    harbor_cxx_runtime="-lstdc++"
+    ;;
+esac
+
+if [ -x "${qemu_install_sources_script}" ]; then
+  "${qemu_install_sources_script}"
+fi
+
+integration_signature() {
+  find "${repo_root}/scripts" "${repo_root}/src/qemu" -type f \
+    \( -name 'qemu-install-harbor-sources.sh' -o -name 'harbor_register_file.c' \) \
+    -exec cksum {} \; |
+    sort |
+    cksum |
+    awk '{ print $1 ":" $2 }'
+}
+
 mkdir -p "${qemu_build_dir}"
+current_integration_signature=$(integration_signature)
+integration_stamp="${qemu_build_dir}/.harbor-qemu-integration.stamp"
 
 cd "${qemu_build_dir}"
 
+if [ ! -f "${integration_stamp}" ] || [ "$(cat "${integration_stamp}")" != "${current_integration_signature}" ]; then
+  echo "[qemu] QEMU integration changed; reconfiguring"
+  rm -f config-host.mak
+  printf "%s\n" "${current_integration_signature}" >"${integration_stamp}"
+fi
+
 if [ -f config.status ] && ! grep -F -- "--python=${python}" config.status >/dev/null 2>&1; then
   echo "[qemu] Existing configuration does not use ${python}; reconfiguring"
+  rm -f config-host.mak
+fi
+
+if [ -f config.status ] && ! grep -F -- "${harbor_qemu_adapter_lib}" config.status >/dev/null 2>&1; then
+  echo "[qemu] Existing configuration does not link the Harbor QEMU adapter; reconfiguring"
   rm -f config-host.mak
 fi
 
@@ -48,7 +100,11 @@ if [ ! -f config-host.mak ]; then
     --disable-gtk \
     --disable-sdl \
     --disable-cocoa \
-    --disable-werror
+    --disable-werror \
+    --extra-cflags="-I${repo_root}/include" \
+    -Dharbor_qemu_adapter_lib="${harbor_qemu_adapter_lib}" \
+    -Dharbor_core_lib="${harbor_core_lib}" \
+    -Dharbor_cxx_runtime="${harbor_cxx_runtime}"
 else
   echo "[qemu] Reusing existing QEMU configuration in ${qemu_build_dir}"
 fi

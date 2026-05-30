@@ -79,10 +79,10 @@ integration.
 - [x] Decide to start with a custom QEMU build so Harbor can add a QEMU-visible MMIO device.
 - [x] Add upstream QEMU as a Git submodule under `external/qemu`.
 - [x] Add host-native QEMU build scripts or CMake integration that build only the required system targets first.
-- [ ] Keep QEMU build artifacts out of Git and outside Docker; Docker remains only for guest cross-compilation.
-- [ ] Decide whether the first QEMU/Harbor connection is a direct in-process device or a bridge that forwards to a Harbor process.
+- [x] Keep QEMU build artifacts out of Git and outside Docker; Docker remains only for guest cross-compilation.
+- [x] Decide whether the first QEMU/Harbor connection is a direct in-process device or a bridge that forwards to a Harbor process.
 - [ ] Define a Harbor transaction interface for MMIO reads and writes.
-- [ ] Add a QEMU-visible MMIO mapping for the minimal register file.
+- [x] Add a QEMU-visible MMIO mapping for the minimal register file.
 - [ ] Add a trivial SystemC peripheral model that exposes one register.
 - [ ] Route a Linux or bare-metal access to that register through QEMU into the SystemC model.
 - [ ] Add basic timing annotation or counters only after functional access works.

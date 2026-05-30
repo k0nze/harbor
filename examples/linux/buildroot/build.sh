@@ -135,6 +135,11 @@ echo "[buildroot] Configuring Buildroot"
 # First materialize the Harbor-owned defconfig into Buildroot's output .config.
 "${make_cmd}" -C "${source_dir}" O="${output_dir}" BR2_EXTERNAL="${external_dir}" BR2_DEFCONFIG="${defconfig}" HOSTCC="${hostcc}" HOSTCXX="${hostcxx}" BASH="${bash_cmd}" AUTORECONF="${autoreconf_cmd}" defconfig
 
+echo "[buildroot] Rebuilding Harbor mmio-test package"
+# mmio-test is a local Buildroot package; force its package directory to be
+# refreshed so source changes in this repository are reflected in the rootfs.
+"${make_cmd}" -C "${source_dir}" O="${output_dir}" BR2_EXTERNAL="${external_dir}" HOSTCC="${hostcc}" HOSTCXX="${hostcxx}" BASH="${bash_cmd}" AUTORECONF="${autoreconf_cmd}" mmio-test-dirclean
+
 echo "[buildroot] Building kernel, rootfs, and userspace"
 # Then build the kernel, toolchain, BusyBox userspace, and root filesystem.
 "${make_cmd}" -C "${source_dir}" O="${output_dir}" BR2_EXTERNAL="${external_dir}" HOSTCC="${hostcc}" HOSTCXX="${hostcxx}" BASH="${bash_cmd}" AUTORECONF="${autoreconf_cmd}"

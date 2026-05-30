@@ -291,3 +291,6 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+codex.txt
+.clangd

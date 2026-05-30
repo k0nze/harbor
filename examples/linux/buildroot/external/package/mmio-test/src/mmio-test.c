@@ -37,6 +37,7 @@ static void print_usage(const char *program)
     printf("  count    %u registers\n", HARBOR_MMIO_REGISTER_FILE_REGISTER_COUNT);
     printf("  width    32 bits\n");
     printf("  span     0x%x bytes\n", HARBOR_MMIO_REGISTER_FILE_ADDRESS_SPAN_BYTES);
+    printf("  const-mask  0x%" PRIx32 "\n", HARBOR_MMIO_REGISTER_FILE_CONSTANT_REGISTER_MASK);
 }
 
 static int parse_u64(const char *text, uint64_t *value)
@@ -128,8 +129,20 @@ static void write_mmio(volatile void *address, enum access_width width, uint64_t
     }
 }
 
+static int register_file_is_constant(unsigned int index)
+{
+    return harbor_mmio_register_file_is_constant_register_index(index);
+}
+
+static uint32_t register_file_reset_value(unsigned int index)
+{
+    return harbor_mmio_register_file_constant_register_value(index);
+}
+
 static int map_and_access(const char *operation, uint64_t physical_address,
-                          enum access_width width, uint64_t write_value)
+                          enum access_width width, uint64_t write_value,
+                          uint64_t readback_expected,
+                          int validate_read)
 {
     const long page_size = sysconf(_SC_PAGESIZE);
     uint64_t page_mask = 0;
@@ -178,13 +191,22 @@ static int map_and_access(const char *operation, uint64_t physical_address,
         value = read_mmio(mmio_address, width);
         printf("read 0x%" PRIx64 " width %u -> 0x%" PRIx64 "\n",
                physical_address, (unsigned int)width * 8U, value);
+
+        if (validate_read && value != (readback_expected & width_mask(width))) {
+            fprintf(stderr,
+                    "Read mismatch at 0x%" PRIx64 ": expected 0x%" PRIx64
+                    ", got 0x%" PRIx64 "\n",
+                    physical_address, readback_expected & width_mask(width), value);
+            munmap(mapping, map_size);
+            close(fd);
+            return 1;
+        }
     } else {
-        write_mmio(mmio_address, width, write_value & width_mask(width));
-        value = read_mmio(mmio_address, width);
-        printf("write 0x%" PRIx64 " width %u <- 0x%" PRIx64
-               " readback 0x%" PRIx64 "\n",
-               physical_address, (unsigned int)width * 8U,
-               write_value & width_mask(width), value);
+        const uint64_t expected = write_value & width_mask(width);
+
+        write_mmio(mmio_address, width, expected);
+        printf("write 0x%" PRIx64 " width %u <- 0x%" PRIx64 "\n",
+               physical_address, (unsigned int)width * 8U, expected);
     }
 
     munmap(mapping, map_size);
@@ -207,8 +229,13 @@ static int register_file_dry_run(void)
            HARBOR_MMIO_REGISTER_FILE_ADDRESS_SPAN_BYTES);
 
     for (index = 0; index < HARBOR_MMIO_REGISTER_FILE_REGISTER_COUNT; ++index) {
+        const int constant_register = register_file_is_constant(index);
+
         printf("register-file[%02u] address 0x%" PRIx64 " width 32\n", index,
                register_file_address(index));
+        if (constant_register) {
+            printf("  constant value 0x%08" PRIx32 "\n", register_file_reset_value(index));
+        }
     }
 
     return 0;
@@ -218,15 +245,29 @@ static int register_file_check(void)
 {
     unsigned int index = 0;
 
+    printf("register-file write pass\n");
     for (index = 0; index < HARBOR_MMIO_REGISTER_FILE_REGISTER_COUNT; ++index) {
         const uint64_t address = register_file_address(index);
         const uint64_t value = UINT64_C(0xa5000000) | (uint64_t)index;
 
-        if (map_and_access("write", address, ACCESS_WIDTH_32, value) != 0) {
+        if (map_and_access("write", address, ACCESS_WIDTH_32, value, 0, 0) != 0) {
             return 1;
         }
     }
 
+    printf("register-file read pass\n");
+    for (index = 0; index < HARBOR_MMIO_REGISTER_FILE_REGISTER_COUNT; ++index) {
+        const uint64_t address = register_file_address(index);
+        const uint64_t written_value = UINT64_C(0xa5000000) | (uint64_t)index;
+        const uint64_t expected_read =
+            register_file_is_constant(index) ? register_file_reset_value(index) : written_value;
+
+        if (map_and_access("read", address, ACCESS_WIDTH_32, 0, expected_read, 1) != 0) {
+            return 1;
+        }
+    }
+
+    printf("register-file check passed\n");
     return 0;
 }
 
@@ -281,7 +322,7 @@ int main(int argc, char **argv)
             return 1;
         }
 
-        return map_and_access(operation, physical_address, width, 0);
+        return map_and_access(operation, physical_address, width, 0, 0, 0);
     }
 
     if (strcmp(operation, "write") == 0) {
@@ -292,7 +333,7 @@ int main(int argc, char **argv)
             return 1;
         }
 
-        return map_and_access(operation, physical_address, width, write_value);
+        return map_and_access(operation, physical_address, width, write_value, 0, 0);
     }
 
     print_usage(argv[0]);

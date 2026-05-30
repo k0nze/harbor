@@ -13,8 +13,8 @@ The first Harbor MMIO test device is a 16-entry register file.
 
 ## Proposed Test Mapping
 
-The current guest-side `mmio-test` uses `0x10010000` as the placeholder test
-address. Once a QEMU adapter exists, map the register file as:
+The current guest-side `mmio-test` uses `0x10010000` as the test address. The
+Harbor-enabled QEMU `virt` build maps the register file as:
 
 ```text
 base: 0x10010000
@@ -32,11 +32,11 @@ The expected readback value is `0x12345678`.
 
 ## Current Implementation Boundary
 
-The Harbor-side model is implemented by `harbor::mmio::RegisterFile`.
-The shared memory-map constants are declared in
-`include/harbor/mmio/register_file_map.h` and are used by both the C++ model
-and the Buildroot guest `mmio-test` utility.
+The Harbor-side model is implemented by `harbor::mmio::RegisterFile`. QEMU does
+not implement register behavior directly. Instead, the QEMU C shim calls the
+Harbor QEMU adapter C ABI declared in `include/harbor/qemu/mmio_adapter.h`,
+and the adapter forwards the access into the Harbor C++ model.
 
-This model does not yet make the registers visible to the guest. A QEMU device
-or bridge still needs to decode the guest physical address range and forward
-32-bit reads and writes to the model.
+The shared memory-map constants are declared in
+`include/harbor/mmio/register_file_map.h` and are used by the C++ model, QEMU
+shim, and Buildroot guest `mmio-test` utility.

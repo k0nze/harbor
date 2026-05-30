@@ -15,6 +15,9 @@ echo "[integration] Fetching Buildroot sources"
 echo "[integration] Building Buildroot Linux image"
 "${repo_root}/examples/linux/buildroot/build.sh"
 
+echo "[integration] Building Harbor-enabled QEMU"
+"${repo_root}/qemu-build.sh"
+
 echo "[integration] Booting Buildroot Linux image"
 "${repo_root}/tests/integration/boot-buildroot-linux.sh"
 

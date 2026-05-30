@@ -138,17 +138,17 @@ mmio-test --help
 mmio-test register-file --dry-run
 ```
 
-During the integration boot check, the image runs that dry-run automatically
-from `/etc/init.d/S90mmio-test`.
+During the integration boot check, the image runs that register-file access
+check automatically from `/etc/init.d/S90mmio-test`.
 
 The first Harbor-side MMIO test model is a 16-entry, 32-bit register file. Its
 proposed guest physical test mapping is documented in
 `docs/minimal-mmio-register-file.md`.
 
 Custom Harbor MMIO devices require a Harbor-enabled QEMU build. Packaged QEMU
-remains useful for the current baseline boot flow, but the next integration
-phase should add QEMU as `external/qemu` and build it natively on the host.
-Docker remains scoped to guest cross-compilation and Buildroot image creation.
+remains useful for baseline boot experiments, but the Harbor integration path
+uses QEMU from `external/qemu` and builds it natively on the host. Docker
+remains scoped to guest cross-compilation and Buildroot image creation.
 
 ## Host-Native QEMU Build
 
@@ -164,6 +164,19 @@ Build the initial host-native `qemu-system-riscv64` binary:
 git submodule update --init external/qemu
 ./qemu-build.sh
 ```
+
+`qemu-build.sh` first builds the Harbor QEMU adapter library, copies the thin
+QEMU C shim from `src/qemu/harbor_register_file.c` into the QEMU submodule,
+then lets `scripts/qemu-install-harbor-sources.sh` install the small QEMU build
+and machine integration edits before configuring QEMU. The QEMU shim only
+handles QEMU device registration and MMIO callbacks; register-file behavior
+lives in Harbor C++ behind the C ABI declared in
+`include/harbor/qemu/mmio_adapter.h`.
+
+The integration script maps that device into the RISC-V `virt` machine at
+`0x10010000` and configures QEMU to link against `libharbor_qemu_adapter.a`
+plus the Harbor core library. This is the boundary where later SystemC/TLM
+models should attach without moving model behavior into QEMU-owned code.
 
 The default build directory is:
 
