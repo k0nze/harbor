@@ -14,6 +14,8 @@ set(HARBOR_RISCV_MINIMAL_ELF "${CMAKE_CURRENT_BINARY_DIR}/riscv-minimal.elf")
 set(HARBOR_RISCV_MINIMAL_MAP "${CMAKE_CURRENT_BINARY_DIR}/riscv-minimal.map")
 set(HARBOR_RISCV_HELLO_ELF "${CMAKE_CURRENT_BINARY_DIR}/riscv-hello.elf")
 set(HARBOR_RISCV_HELLO_MAP "${CMAKE_CURRENT_BINARY_DIR}/riscv-hello.map")
+set(HARBOR_RISCV_SYSTEMC_MMIO_ELF "${CMAKE_CURRENT_BINARY_DIR}/riscv-systemc-mmio.elf")
+set(HARBOR_RISCV_SYSTEMC_MMIO_MAP "${CMAKE_CURRENT_BINARY_DIR}/riscv-systemc-mmio.map")
 set(HARBOR_RISCV_MINIMAL_LINKER_SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/linker.ld")
 set(HARBOR_RISCV_COMMON_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../common")
 
@@ -76,4 +78,40 @@ add_custom_command(
 
 add_custom_target(harbor_riscv_c
   DEPENDS "${HARBOR_RISCV_HELLO_ELF}"
+)
+
+add_custom_command(
+  OUTPUT "${HARBOR_RISCV_SYSTEMC_MMIO_ELF}"
+  COMMAND
+    "${HARBOR_RISCV_GCC}"
+      -march=rv64imac
+      -mabi=lp64
+      -mcmodel=medany
+      -ffreestanding
+      -fno-builtin
+      -Wall
+      -Wextra
+      -nostdlib
+      -nostartfiles
+      "-I${HARBOR_RISCV_COMMON_DIR}"
+      "-T${HARBOR_RISCV_MINIMAL_LINKER_SCRIPT}"
+      "-Wl,--no-relax"
+      "-Wl,--no-warn-rwx-segments"
+      "-Wl,-Map,${HARBOR_RISCV_SYSTEMC_MMIO_MAP}"
+      -o "${HARBOR_RISCV_SYSTEMC_MMIO_ELF}"
+      "${HARBOR_RISCV_COMMON_DIR}/start.S"
+      "${HARBOR_RISCV_COMMON_DIR}/runtime.c"
+      "${CMAKE_CURRENT_SOURCE_DIR}/../systemc-mmio/main.c"
+  DEPENDS
+    "${HARBOR_RISCV_COMMON_DIR}/start.S"
+    "${HARBOR_RISCV_COMMON_DIR}/runtime.c"
+    "${HARBOR_RISCV_COMMON_DIR}/runtime.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../systemc-mmio/main.c"
+    "${HARBOR_RISCV_MINIMAL_LINKER_SCRIPT}"
+  COMMENT "Building RISC-V SystemC MMIO ELF for QEMU"
+  VERBATIM
+)
+
+add_custom_target(harbor_riscv_systemc_mmio
+  DEPENDS "${HARBOR_RISCV_SYSTEMC_MMIO_ELF}"
 )

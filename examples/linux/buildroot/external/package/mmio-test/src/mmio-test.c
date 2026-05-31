@@ -8,7 +8,10 @@
 #include <sys/mman.h>
 #include <unistd.h>
 
-#include "harbor/mmio/register_file_map.h"
+#define HARBOR_SYSTEMC_REGISTER_BASE UINT64_C(0x10010000)
+#define HARBOR_SYSTEMC_REGISTER_WIDTH_BYTES 4U
+#define HARBOR_SYSTEMC_REGISTER_RESET_VALUE UINT32_C(0x12345678)
+#define HARBOR_SYSTEMC_REGISTER_WRITE_VALUE UINT32_C(0xa5a55a5a)
 
 enum access_width {
     ACCESS_WIDTH_8 = 1,
@@ -24,20 +27,18 @@ static void print_usage(const char *program)
     printf("  %s --dry-run <address> [width]\n", program);
     printf("  %s read <address> [width]\n", program);
     printf("  %s write <address> <value> [width]\n", program);
-    printf("  %s register-file --dry-run\n", program);
-    printf("  %s register-file check\n", program);
+    printf("  %s systemc-register --dry-run\n", program);
+    printf("  %s systemc-register check\n", program);
     printf("\n");
     printf("Arguments:\n");
     printf("  address  Physical MMIO address, for example 0x10010000.\n");
     printf("  value    Integer value to write.\n");
     printf("  width    Access width in bits: 8, 16, 32, or 64. Defaults to 32.\n");
     printf("\n");
-    printf("Register file:\n");
-    printf("  base     0x%" PRIx64 "\n", HARBOR_MMIO_REGISTER_FILE_BASE);
-    printf("  count    %u registers\n", HARBOR_MMIO_REGISTER_FILE_REGISTER_COUNT);
+    printf("SystemC register:\n");
+    printf("  base     0x%" PRIx64 "\n", HARBOR_SYSTEMC_REGISTER_BASE);
     printf("  width    32 bits\n");
-    printf("  span     0x%x bytes\n", HARBOR_MMIO_REGISTER_FILE_ADDRESS_SPAN_BYTES);
-    printf("  const-mask  0x%" PRIx32 "\n", HARBOR_MMIO_REGISTER_FILE_CONSTANT_REGISTER_MASK);
+    printf("  span     0x%x bytes\n", HARBOR_SYSTEMC_REGISTER_WIDTH_BYTES);
 }
 
 static int parse_u64(const char *text, uint64_t *value)
@@ -129,16 +130,6 @@ static void write_mmio(volatile void *address, enum access_width width, uint64_t
     }
 }
 
-static int register_file_is_constant(unsigned int index)
-{
-    return harbor_mmio_register_file_is_constant_register_index(index);
-}
-
-static uint32_t register_file_reset_value(unsigned int index)
-{
-    return harbor_mmio_register_file_constant_register_value(index);
-}
-
 static int map_and_access(const char *operation, uint64_t physical_address,
                           enum access_width width, uint64_t write_value,
                           uint64_t readback_expected,
@@ -214,60 +205,37 @@ static int map_and_access(const char *operation, uint64_t physical_address,
     return 0;
 }
 
-static uint64_t register_file_address(unsigned int index)
+static int systemc_register_dry_run(void)
 {
-    return HARBOR_MMIO_REGISTER_FILE_BASE +
-           ((uint64_t)index * HARBOR_MMIO_REGISTER_FILE_REGISTER_WIDTH_BYTES);
-}
-
-static int register_file_dry_run(void)
-{
-    unsigned int index = 0;
-
-    printf("register-file dry-run base 0x%" PRIx64 " count %u width 32 span 0x%x\n",
-           HARBOR_MMIO_REGISTER_FILE_BASE, HARBOR_MMIO_REGISTER_FILE_REGISTER_COUNT,
-           HARBOR_MMIO_REGISTER_FILE_ADDRESS_SPAN_BYTES);
-
-    for (index = 0; index < HARBOR_MMIO_REGISTER_FILE_REGISTER_COUNT; ++index) {
-        const int constant_register = register_file_is_constant(index);
-
-        printf("register-file[%02u] address 0x%" PRIx64 " width 32\n", index,
-               register_file_address(index));
-        if (constant_register) {
-            printf("  constant value 0x%08" PRIx32 "\n", register_file_reset_value(index));
-        }
-    }
-
+    printf("systemc-register dry-run base 0x%" PRIx64 " width 32 span 0x%x\n",
+           HARBOR_SYSTEMC_REGISTER_BASE,
+           HARBOR_SYSTEMC_REGISTER_WIDTH_BYTES);
+    printf("systemc-register reset value 0x%08" PRIx32 "\n",
+           HARBOR_SYSTEMC_REGISTER_RESET_VALUE);
     return 0;
 }
 
-static int register_file_check(void)
+static int systemc_register_check(void)
 {
-    unsigned int index = 0;
-
-    printf("register-file write pass\n");
-    for (index = 0; index < HARBOR_MMIO_REGISTER_FILE_REGISTER_COUNT; ++index) {
-        const uint64_t address = register_file_address(index);
-        const uint64_t value = UINT64_C(0xa5000000) | (uint64_t)index;
-
-        if (map_and_access("write", address, ACCESS_WIDTH_32, value, 0, 0) != 0) {
-            return 1;
-        }
+    printf("systemc-register read reset\n");
+    if (map_and_access("read", HARBOR_SYSTEMC_REGISTER_BASE, ACCESS_WIDTH_32, 0,
+                       HARBOR_SYSTEMC_REGISTER_RESET_VALUE, 1) != 0) {
+        return 1;
     }
 
-    printf("register-file read pass\n");
-    for (index = 0; index < HARBOR_MMIO_REGISTER_FILE_REGISTER_COUNT; ++index) {
-        const uint64_t address = register_file_address(index);
-        const uint64_t written_value = UINT64_C(0xa5000000) | (uint64_t)index;
-        const uint64_t expected_read =
-            register_file_is_constant(index) ? register_file_reset_value(index) : written_value;
-
-        if (map_and_access("read", address, ACCESS_WIDTH_32, 0, expected_read, 1) != 0) {
-            return 1;
-        }
+    printf("systemc-register write pass\n");
+    if (map_and_access("write", HARBOR_SYSTEMC_REGISTER_BASE, ACCESS_WIDTH_32,
+                       HARBOR_SYSTEMC_REGISTER_WRITE_VALUE, 0, 0) != 0) {
+        return 1;
     }
 
-    printf("register-file check passed\n");
+    printf("systemc-register read pass\n");
+    if (map_and_access("read", HARBOR_SYSTEMC_REGISTER_BASE, ACCESS_WIDTH_32, 0,
+                       HARBOR_SYSTEMC_REGISTER_WRITE_VALUE, 1) != 0) {
+        return 1;
+    }
+
+    printf("systemc-register check passed\n");
     return 0;
 }
 
@@ -285,18 +253,18 @@ int main(int argc, char **argv)
 
     operation = argv[1];
 
-    if (strcmp(operation, "register-file") == 0) {
+    if (strcmp(operation, "systemc-register") == 0) {
         if (argc != 3) {
             print_usage(argv[0]);
             return 1;
         }
 
         if (strcmp(argv[2], "--dry-run") == 0) {
-            return register_file_dry_run();
+            return systemc_register_dry_run();
         }
 
         if (strcmp(argv[2], "check") == 0) {
-            return register_file_check();
+            return systemc_register_check();
         }
 
         print_usage(argv[0]);

@@ -12,16 +12,19 @@ extern "C" {
  * @brief Opaque Harbor MMIO device handle used by QEMU C device code.
  *
  * QEMU must treat this object as an opaque adapter endpoint. The implementation
- * lives in Harbor C++ code and may later forward transactions into SystemC/TLM.
+ * lives in Harbor C++ code and forwards transactions into SystemC/TLM models.
  */
 typedef struct HarborQemuMmioDevice HarborQemuMmioDevice;
 
 /**
- * @brief Create the minimal Harbor register-file device.
+ * @brief Create a SystemC-backed single-register MMIO device.
  *
+ * The returned handle is accessed through the generic Harbor QEMU MMIO C ABI.
+ *
+ * @param reset_value Initial value restored by reset.
  * @return New device handle, or NULL if allocation fails.
  */
-HarborQemuMmioDevice *harbor_qemu_register_file_create(void);
+HarborQemuMmioDevice *harbor_qemu_systemc_single_register_create(uint32_t reset_value);
 
 /**
  * @brief Destroy a Harbor MMIO device handle.

@@ -2,8 +2,8 @@
 
 case "$1" in
   start)
-    echo "Running Harbor register-file check"
-    /usr/bin/mmio-test register-file check
+    echo "Running Harbor SystemC register check"
+    /usr/bin/mmio-test systemc-register check
     ;;
   stop|restart|reload)
     ;;

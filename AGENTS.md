@@ -137,9 +137,12 @@ Current checks:
 * `tests/integration/boot-buildroot-linux.sh` boots existing Buildroot
   artifacts, verifies that the root filesystem contains `mmio-test`, waits
   until Linux starts `/init`, `eth0` receives a DHCP lease, and the guest runs
-  `mmio-test register-file --dry-run`, then terminates QEMU.
+  `mmio-test systemc-register check`, then terminates QEMU. The check reads the
+  SystemC register reset value, writes the register, reads it back, and prints
+  each MMIO read/write with a `[linux-mmio]` prefix.
 * `tests/cleanup.sh` removes generated build artifacts, downloaded Buildroot
-  sources, and the prepared example builder image.
+  sources, Docker volumes, the prepared example builder image, and
+  Harbor-installed QEMU integration artifacts under `external/qemu`.
 
 Use `tests/integration/run-riscv-examples.sh` for changes that affect CMake,
 RISC-V examples, QEMU run scripts, toolchain detection, linker scripts, or
@@ -156,8 +159,8 @@ Prefer small, testable integration seams:
 * Define Harbor-owned interfaces before binding directly to QEMU internals.
 * Keep QEMU-specific adapter code separate from SystemC model code.
 * Treat MMIO and memory transactions as the first integration path.
-* Use the minimal 16-entry, 32-bit register file documented in
-  `docs/minimal-mmio-register-file.md` as the first guest-visible MMIO device.
+* Use the SystemC-backed single 32-bit register as the first guest-visible MMIO
+  device.
 * Add timing annotation or synchronization only after functional transactions
   are working.
 * Document assumptions around blocking behavior, threading, and time

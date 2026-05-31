@@ -11,7 +11,8 @@ fi
 
 cmake -S "${repo_root}" -B "${build_dir}" \
   -DHARBOR_BUILD_RISCV_EXAMPLES=OFF \
-  -DHARBOR_BUILD_TESTS=ON
+  -DHARBOR_BUILD_TESTS=ON \
+  -DHARBOR_ENABLE_SYSTEMC=ON
 
-cmake --build "${build_dir}" --target harbor_register_file_test
+cmake --build "${build_dir}"
 ctest --test-dir "${build_dir}" --output-on-failure

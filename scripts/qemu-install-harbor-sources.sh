@@ -105,6 +105,39 @@ append_once() {
   printf "\n%s\n" "${block}" >>"${file}"
 }
 
+remove_harbor_misc_meson_block() {
+  local file="$1"
+  local tmp
+
+  tmp=$(mktemp)
+
+  awk '
+    /^harbor_qemu_adapter_link_args = \[$/ ||
+    /^harbor_qemu_adapter = declare_dependency\($/ {
+      skip = 1
+      next
+    }
+
+    skip && /^system_ss.add\(when: '\''CONFIG_HARBOR_REGISTER_FILE'\''/ {
+      skip_system_ss = 1
+      next
+    }
+
+    skip && skip_system_ss &&
+      /if_true: \[files\('\''harbor_register_file\.c'\''\), harbor_qemu_adapter\]\)/ {
+      skip = 0
+      skip_system_ss = 0
+      next
+    }
+
+    !skip {
+      print
+    }
+  ' "${file}" >"${tmp}"
+
+  mv "${tmp}" "${file}"
+}
+
 insert_before_once \
   "${qemu_source_dir}/hw/misc/Kconfig" \
   "config SIFIVE_E_PRCI" \
@@ -113,17 +146,29 @@ insert_before_once \
     bool
 "
 
+remove_harbor_misc_meson_block "${qemu_source_dir}/hw/misc/meson.build"
+
 insert_after_once \
   "${qemu_source_dir}/hw/misc/meson.build" \
   "system_ss.add(when: 'CONFIG_MCHP_PFSOC_SYSREG', if_true: files('mchp_pfsoc_sysreg.c'))" \
-  "harbor_qemu_adapter = declare_dependency(" \
-  "harbor_qemu_adapter = declare_dependency(
-  link_args: [
-    get_option('harbor_qemu_adapter_lib'),
-    get_option('harbor_core_lib'),
-    get_option('harbor_cxx_runtime'),
-  ],
-)
+  "harbor_qemu_adapter_link_args = [" \
+  "harbor_qemu_adapter_link_args = [
+  get_option('harbor_qemu_adapter_lib'),
+]
+if get_option('harbor_qemu_support_lib') != ''
+  harbor_qemu_adapter_link_args += [get_option('harbor_qemu_support_lib')]
+endif
+if get_option('harbor_systemc_lib') != ''
+  harbor_qemu_adapter_link_args += [get_option('harbor_systemc_lib')]
+endif
+harbor_qemu_adapter_link_args += [
+  get_option('harbor_core_lib'),
+  get_option('harbor_cxx_runtime'),
+]
+if get_option('harbor_systemc_link_args') != ''
+  harbor_qemu_adapter_link_args += get_option('harbor_systemc_link_args').split()
+endif
+harbor_qemu_adapter = declare_dependency(link_args: harbor_qemu_adapter_link_args)
 system_ss.add(when: 'CONFIG_HARBOR_REGISTER_FILE',
               if_true: [files('harbor_register_file.c'), harbor_qemu_adapter])"
 
@@ -136,6 +181,24 @@ option('harbor_core_lib', type: 'string', value: '',
        description: 'absolute path to Harbor core static library')
 option('harbor_cxx_runtime', type: 'string', value: '',
        description: 'C++ runtime linker argument required by Harbor adapter')"
+
+append_once \
+  "${qemu_source_dir}/meson_options.txt" \
+  "option('harbor_qemu_support_lib'" \
+  "option('harbor_qemu_support_lib', type: 'string', value: '',
+       description: 'optional absolute path to a secondary Harbor QEMU support library')"
+
+append_once \
+  "${qemu_source_dir}/meson_options.txt" \
+  "option('harbor_systemc_lib'" \
+  "option('harbor_systemc_lib', type: 'string', value: '',
+       description: 'optional absolute path to the Harbor SystemC static library')"
+
+append_once \
+  "${qemu_source_dir}/meson_options.txt" \
+  "option('harbor_systemc_link_args'" \
+  "option('harbor_systemc_link_args', type: 'string', value: '',
+       description: 'optional SystemC linker arguments')"
 
 insert_after_once \
   "${qemu_source_dir}/hw/riscv/Kconfig" \
@@ -154,7 +217,7 @@ insert_after_once \
   "    sifive_test_create(s->memmap[VIRT_TEST].base);" \
   "    sysbus_create_simple(\"harbor-register-file\"," \
   "
-    /* Harbor register-file MMIO device */
+    /* Harbor SystemC MMIO device */
     sysbus_create_simple(\"harbor-register-file\",
                          s->memmap[VIRT_HARBOR_REGISTER_FILE].base, NULL);"
 

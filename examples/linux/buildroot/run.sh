@@ -6,6 +6,11 @@ output_dir="${BUILDROOT_OUTPUT_DIR:-${repo_root}/build/buildroot/riscv64-qemu-vi
 qemu="${QEMU:-qemu-system-riscv64}"
 kernel="${output_dir}/images/Image"
 rootfs="${output_dir}/images/rootfs.cpio"
+kernel_append="console=ttyS0"
+
+if [ -n "${EXTRA_KERNEL_APPEND:-}" ]; then
+  kernel_append="${kernel_append} ${EXTRA_KERNEL_APPEND}"
+fi
 
 if ! command -v "${qemu}" >/dev/null 2>&1; then
   echo "QEMU executable not found: ${qemu}" >&2
@@ -27,4 +32,4 @@ exec "${qemu}" \
   -device virtio-net-device,netdev=net0 \
   -kernel "${kernel}" \
   -initrd "${rootfs}" \
-  -append "console=ttyS0"
+  -append "${kernel_append}"

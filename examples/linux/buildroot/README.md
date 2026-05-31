@@ -81,24 +81,22 @@ Expected boot milestones:
 ## MMIO Test Utility
 
 The image installs `mmio-test`, a small userspace utility for future validation
-of Harbor-provided MMIO devices. It can parse and dry-run a physical MMIO
-access before a device exists:
+of Harbor-provided MMIO devices:
 
 ```sh
 mmio-test --help
-mmio-test register-file --dry-run
+mmio-test systemc-register --dry-run
 ```
 
-The package also installs `/etc/init.d/S90mmio-test`, which runs the dry-run
-during boot. The integration test checks for this output on the serial console.
-
-Once a QEMU/SystemC MMIO device is available, the same utility can be used from
-inside the guest:
+The package also installs `/etc/init.d/S90mmio-test`, which runs the
+SystemC-backed register check during boot. The integration test checks for this
+output on the serial console. The same utility can be used from inside the
+guest:
 
 ```sh
 mmio-test read 0x10010000
 mmio-test write 0x10010000 0x12345678
-mmio-test register-file check
+mmio-test systemc-register check
 ```
 
 The default access width is 32 bits. Pass `8`, `16`, `32`, or `64` as the final

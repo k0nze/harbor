@@ -5,7 +5,7 @@
 ### macOS
 
 ```bash
-brew install qemu ninja pkgconf glib pixman
+brew install qemu ninja pkgconf glib pixman systemc
 brew install --cask docker
 ```
 
@@ -27,6 +27,13 @@ copy final artifacts back into `build/`.
 
 The integration scripts build the shared image automatically if it is missing.
 The per-example build scripts still expect the image to already exist.
+
+To verify the host SystemC installation through CMake:
+
+```bash
+cmake -S . -B build/systemc-check -DHARBOR_ENABLE_SYSTEMC=ON
+cmake --build build/systemc-check --target harbor_systemc
+```
 
 ## RISC-V Assembly Bare-Metal Example
 
@@ -99,8 +106,9 @@ step.
 The full integration script builds the bare-metal examples, builds the
 Buildroot Linux baseline, verifies that `mmio-test` is present in the root
 filesystem, and boots Linux until `/init` starts, `eth0` receives a DHCP lease,
-and the guest executes `mmio-test --dry-run 0x10010000`. The Linux boot log is
-written to `build/test-logs/`.
+and the guest executes `mmio-test systemc-register check`. The Linux integration
+test prints each SystemC-backed MMIO read/write with a `[linux-mmio]` prefix.
+The full Linux boot log is written to `build/test-logs/`.
 
 To run only the Linux boot check against existing Buildroot artifacts:
 
@@ -138,19 +146,20 @@ virtio network device backed by QEMU user-mode networking, and Buildroot brings
 up `eth0` with DHCP during boot.
 
 The image also installs `mmio-test`, a small userspace utility that will be used
-to validate future Harbor-provided MMIO devices from inside Linux:
+to validate Harbor-provided MMIO devices from inside Linux:
 
 ```sh
 mmio-test --help
-mmio-test register-file --dry-run
+mmio-test systemc-register --dry-run
+mmio-test systemc-register check
 ```
 
-During the integration boot check, the image runs that register-file access
-check automatically from `/etc/init.d/S90mmio-test`.
+During the integration boot check, the image runs `mmio-test systemc-register
+check` automatically from `/etc/init.d/S90mmio-test`. That check reads the
+SystemC register reset value, writes a new value, and reads it back.
 
-The first Harbor-side MMIO test model is a 16-entry, 32-bit register file. Its
-proposed guest physical test mapping is documented in
-`docs/minimal-mmio-register-file.md`.
+The first Harbor-side MMIO test model is a SystemC-backed 32-bit register mapped
+at guest physical address `0x10010000`.
 
 Custom Harbor MMIO devices require a Harbor-enabled QEMU build. Packaged QEMU
 remains useful for baseline boot experiments, but the Harbor integration path
@@ -165,7 +174,8 @@ QEMU is vendored as a submodule under:
 external/qemu
 ```
 
-Build the initial host-native `qemu-system-riscv64` binary:
+Build the host-native `qemu-system-riscv64` binary with Harbor's SystemC MMIO
+adapter:
 
 ```bash
 git submodule update --init external/qemu
@@ -176,14 +186,24 @@ git submodule update --init external/qemu
 QEMU C shim from `src/qemu/harbor_register_file.c` into the QEMU submodule,
 then lets `scripts/qemu-install-harbor-sources.sh` install the small QEMU build
 and machine integration edits before configuring QEMU. The QEMU shim only
-handles QEMU device registration and MMIO callbacks; register-file behavior
-lives in Harbor C++ behind the C ABI declared in
-`include/harbor/qemu/mmio_adapter.h`.
+handles QEMU device registration and MMIO callbacks; device behavior lives in
+Harbor SystemC behind the C ABI declared in `include/harbor/qemu/mmio_adapter.h`.
 
 The integration script maps that device into the RISC-V `virt` machine at
 `0x10010000` and configures QEMU to link against `libharbor_qemu_adapter.a`
-plus the Harbor core library. This is the boundary where later SystemC/TLM
-models should attach without moving model behavior into QEMU-owned code.
+plus the Harbor core and SystemC libraries. This is the boundary where later
+SystemC/TLM models should attach without moving model behavior into QEMU-owned
+code.
+
+The Buildroot integration check can validate that SystemC-backed register from
+inside Linux:
+
+```bash
+./qemu-build.sh
+tests/integration/boot-buildroot-linux.sh
+```
+
+The full integration script runs the SystemC-backed Linux MMIO path.
 
 The default build directory is:
 

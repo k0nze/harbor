@@ -51,8 +51,9 @@ integration.
 - [x] Add a QEMU command that boots the Buildroot image to a console.
 - [x] Add a shorter Linux boot command for quick validation.
 - [x] Record the expected boot log milestones, including OpenSBI, kernel start, rootfs mount, and shell or init.
-- [x] Add a small userspace test program that can later access a Harbor-provided MMIO device.
-- [x] Document cleanup rules for generated images and downloads.
+- [x] Add a small userspace test program that accesses the Harbor SystemC MMIO device.
+- [x] Run the SystemC MMIO test automatically during the Linux boot integration check and print each MMIO read/write on the command line.
+- [x] Document cleanup rules for generated images, downloads, Docker volumes, and Harbor-installed QEMU integration artifacts.
 
 ## 6. Linux Phase 2: Real Distro Evaluation
 
@@ -72,20 +73,40 @@ integration.
 - [ ] Add a reproducible Yocto image build flow only if product-style image generation is required.
 - [ ] Keep Yocto optional so it does not block fast QEMU/SystemC iteration.
 
-## 8. First SystemC/TLM Integration Plan
+## 8. First Harbor/QEMU MMIO Integration
 
-- [ ] Identify the smallest QEMU-to-Harbor boundary to prototype, such as a custom MMIO device.
-- [x] Define the first Harbor-side MMIO test model: a 16-entry 32-bit register file.
+- [x] Identify the smallest QEMU-to-Harbor boundary to prototype: a custom MMIO device backed by a Harbor C++ model.
+- [x] Define the first Harbor-side MMIO test model: a SystemC-backed 32-bit register.
 - [x] Decide to start with a custom QEMU build so Harbor can add a QEMU-visible MMIO device.
 - [x] Add upstream QEMU as a Git submodule under `external/qemu`.
 - [x] Add host-native QEMU build scripts or CMake integration that build only the required system targets first.
 - [x] Keep QEMU build artifacts out of Git and outside Docker; Docker remains only for guest cross-compilation.
-- [x] Decide whether the first QEMU/Harbor connection is a direct in-process device or a bridge that forwards to a Harbor process.
-- [ ] Define a Harbor transaction interface for MMIO reads and writes.
-- [x] Add a QEMU-visible MMIO mapping for the minimal register file.
-- [ ] Add a trivial SystemC peripheral model that exposes one register.
-- [ ] Route a Linux or bare-metal access to that register through QEMU into the SystemC model.
+- [x] Decide that the first QEMU/Harbor connection is direct in-process through a thin QEMU C shim and Harbor-owned C ABI adapter.
+- [x] Define the first Harbor register access interface through the environment-neutral MMIO transaction interface and `include/harbor/qemu/mmio_adapter.h`.
+- [x] Add a QEMU-visible MMIO mapping for the SystemC-backed register.
+- [x] Add Linux integration coverage that reads the SystemC reset value, writes the register, and reads it back.
+
+## 9. First SystemC/TLM Integration Plan
+
+- [x] Add SystemC to the documented host dependencies.
+- [x] Add CMake detection for the host SystemC installation.
+- [x] Add a small Harbor SystemC library target that is separate from QEMU-owned source files.
+- [x] Define the Harbor-owned MMIO transaction boundary that QEMU adapters call without exposing QEMU internals to SystemC models.
+- [x] Add a trivial SystemC peripheral model that exposes one 32-bit register.
+- [x] Add a C++ adapter that connects the existing QEMU-facing Harbor C ABI to the SystemC-backed register model.
+- [x] Add host-side tests for the SystemC register model and adapter before using QEMU.
+- [x] Route a Linux or bare-metal access to that register through QEMU into the SystemC model.
+- [x] Add integration coverage that proves the Linux guest can read/write the SystemC-backed register.
 - [ ] Add basic timing annotation or counters only after functional access works.
+- [ ] Define how QEMU consumes Harbor MMIO latency annotations.
+- [ ] Define the QEMU/SystemC time synchronization policy.
+- [ ] Replace the one-register proof-of-concept with a reusable SystemC/TLM peripheral pattern.
+- [ ] Add a real TLM socket and transport path behind the Harbor MMIO transaction boundary.
+- [ ] Extend the SystemC path beyond one register to cover multiple registers and devices.
+- [ ] Define reset, interrupt, and lifecycle interfaces for SystemC models.
+- [ ] Document QEMU/SystemC threading, blocking behavior, and ownership assumptions.
+- [ ] Add SystemC integration tests for invalid accesses, multiple devices, timing annotations, and reset behavior.
+- [ ] Add SystemC-backed models for the next exploration targets: memory behavior, interrupt lines, DMA-capable devices, bus or interconnect behavior, and cache or memory timing.
 
 ## Open Design Questions
 

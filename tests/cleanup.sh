@@ -86,6 +86,7 @@ cleanup_qemu_integration() {
   '
 
   rewrite_file "${qemu_source_dir}/hw/misc/meson.build" '
+    /^harbor_qemu_adapter_link_args = \[$/ { skip = 1; next }
     /^harbor_qemu_adapter = declare_dependency\($/ { skip = 1; next }
     skip && /^              if_true: \[files\('\''harbor_register_file\.c'\''\), harbor_qemu_adapter\]\)$/ {
       skip = 0
@@ -101,6 +102,10 @@ cleanup_qemu_integration() {
       skip = 0
       next
     }
+    skip && /^       description: '\''optional SystemC linker arguments'\''\)$/ {
+      skip = 0
+      next
+    }
     skip { next }
     { print }
   '
@@ -113,6 +118,7 @@ cleanup_qemu_integration() {
   rewrite_file "${qemu_source_dir}/hw/riscv/virt.c" '
     /^    \[VIRT_HARBOR_REGISTER_FILE\] = \{ 0x10010000, 0x40 \},$/ { next }
     /^    \/\* Harbor register-file MMIO device \*\/$/ { skip = 1; next }
+    /^    \/\* Harbor SystemC MMIO device \*\/$/ { skip = 1; next }
     skip && /^                         s->memmap\[VIRT_HARBOR_REGISTER_FILE\]\.base, NULL\);$/ {
       skip = 0
       next

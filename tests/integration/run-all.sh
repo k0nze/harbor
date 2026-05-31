@@ -18,10 +18,10 @@ echo "[integration] Fetching Buildroot sources"
 echo "[integration] Building Buildroot Linux image"
 "${repo_root}/examples/linux/buildroot/build.sh"
 
-echo "[integration] Building Harbor-enabled QEMU"
+echo "[integration] Building Harbor-enabled QEMU with SystemC MMIO"
 "${repo_root}/qemu-build.sh"
 
-echo "[integration] Booting Buildroot Linux image"
+echo "[integration] Booting Buildroot Linux image with SystemC MMIO"
 "${repo_root}/tests/integration/boot-buildroot-linux.sh"
 
 echo "[integration] All integration checks passed"

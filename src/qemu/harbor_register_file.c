@@ -1,9 +1,8 @@
 /*
- * QEMU-facing Harbor register-file MMIO device.
+ * QEMU-facing Harbor SystemC MMIO device.
  *
  * This file is a thin QEMU C shim. Device behavior lives behind the Harbor
- * QEMU MMIO adapter so Harbor C++ and future SystemC/TLM models remain the
- * source of truth.
+ * QEMU MMIO adapter so Harbor SystemC/TLM models remain the source of truth.
  */
 
 #include "qemu/osdep.h"
@@ -13,10 +12,14 @@
 #include "qemu/log.h"
 #include "qemu/module.h"
 
-#include "harbor/mmio/register_file_map.h"
 #include "harbor/qemu/mmio_adapter.h"
 
 #define TYPE_HARBOR_REGISTER_FILE "harbor-register-file"
+
+#define HARBOR_QEMU_REGISTER_WIDTH_BYTES 4U
+#define HARBOR_QEMU_MMIO_SPAN_BYTES HARBOR_QEMU_REGISTER_WIDTH_BYTES
+#define HARBOR_QEMU_SYSTEMC_SINGLE_REGISTER_RESET 0x12345678U
+
 OBJECT_DECLARE_SIMPLE_TYPE(HarborRegisterFileState, HARBOR_REGISTER_FILE)
 
 struct HarborRegisterFileState {
@@ -27,9 +30,9 @@ struct HarborRegisterFileState {
 
 static bool harbor_register_file_valid_access(hwaddr addr, unsigned int size)
 {
-    return size == HARBOR_MMIO_REGISTER_FILE_REGISTER_WIDTH_BYTES &&
-           (addr % HARBOR_MMIO_REGISTER_FILE_REGISTER_WIDTH_BYTES) == 0 &&
-           addr < HARBOR_MMIO_REGISTER_FILE_ADDRESS_SPAN_BYTES;
+    return size == HARBOR_QEMU_REGISTER_WIDTH_BYTES &&
+           (addr % HARBOR_QEMU_REGISTER_WIDTH_BYTES) == 0 &&
+           addr < HARBOR_QEMU_MMIO_SPAN_BYTES;
 }
 
 static uint64_t harbor_register_file_read(void *opaque, hwaddr addr,
@@ -68,13 +71,13 @@ static const MemoryRegionOps harbor_register_file_ops = {
     .write = harbor_register_file_write,
     .endianness = DEVICE_LITTLE_ENDIAN,
     .valid = {
-        .min_access_size = HARBOR_MMIO_REGISTER_FILE_REGISTER_WIDTH_BYTES,
-        .max_access_size = HARBOR_MMIO_REGISTER_FILE_REGISTER_WIDTH_BYTES,
+        .min_access_size = HARBOR_QEMU_REGISTER_WIDTH_BYTES,
+        .max_access_size = HARBOR_QEMU_REGISTER_WIDTH_BYTES,
         .unaligned = false,
     },
     .impl = {
-        .min_access_size = HARBOR_MMIO_REGISTER_FILE_REGISTER_WIDTH_BYTES,
-        .max_access_size = HARBOR_MMIO_REGISTER_FILE_REGISTER_WIDTH_BYTES,
+        .min_access_size = HARBOR_QEMU_REGISTER_WIDTH_BYTES,
+        .max_access_size = HARBOR_QEMU_REGISTER_WIDTH_BYTES,
         .unaligned = false,
     },
 };
@@ -98,16 +101,17 @@ static void harbor_register_file_init(Object *obj)
 {
     HarborRegisterFileState *s = HARBOR_REGISTER_FILE(obj);
 
-    s->device = harbor_qemu_register_file_create();
+    s->device = harbor_qemu_systemc_single_register_create(
+        HARBOR_QEMU_SYSTEMC_SINGLE_REGISTER_RESET);
     if (s->device == NULL) {
-        error_report("%s: failed to allocate Harbor register-file adapter",
+        error_report("%s: failed to allocate Harbor SystemC MMIO adapter",
                      TYPE_HARBOR_REGISTER_FILE);
         abort();
     }
 
     memory_region_init_io(&s->mmio, obj, &harbor_register_file_ops, s,
                           TYPE_HARBOR_REGISTER_FILE,
-                          HARBOR_MMIO_REGISTER_FILE_ADDRESS_SPAN_BYTES);
+                          HARBOR_QEMU_MMIO_SPAN_BYTES);
     sysbus_init_mmio(SYS_BUS_DEVICE(obj), &s->mmio);
 }
 

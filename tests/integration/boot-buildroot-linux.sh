@@ -3,12 +3,13 @@ set -eu
 
 repo_root=$(CDPATH= cd -- "$(dirname -- "$0")/../.." && pwd)
 log_dir="${repo_root}/build/test-logs"
-linux_boot_log="${log_dir}/buildroot-linux-boot.log"
 linux_boot_timeout="${LINUX_BOOT_TIMEOUT_SECONDS:-120}"
 output_dir="${BUILDROOT_OUTPUT_DIR:-${repo_root}/build/buildroot/riscv64-qemu-virt}"
 kernel="${output_dir}/images/Image"
 rootfs="${output_dir}/images/rootfs.cpio"
 harbor_qemu="${repo_root}/build/qemu/riscv64-softmmu/qemu-system-riscv64"
+
+linux_boot_log="${log_dir}/buildroot-linux-boot-systemc-register.log"
 
 if [ ! -f "${kernel}" ] || [ ! -f "${rootfs}" ]; then
   echo "Missing Buildroot artifacts under ${output_dir}/images" >&2
@@ -38,6 +39,7 @@ if [ -z "${QEMU:-}" ] && [ -x "${harbor_qemu}" ]; then
 fi
 
 echo "[integration] Starting QEMU for Buildroot Linux"
+
 "${repo_root}/examples/linux/buildroot/run.sh" >"${linux_boot_log}" 2>&1 &
 qemu_pid=$!
 
@@ -70,12 +72,13 @@ print_new_mmio_output() {
 
   start_line=$((last_printed_log_line + 1))
   sed -n "${start_line},${line_count}p" "${linux_boot_log}" | awk '
-    /Running Harbor register-file check/ { print "[linux-mmio] " $0 }
-    /register-file write pass/ { print "[linux-mmio] " $0 }
+    /Running Harbor SystemC register check/ { print "[linux-mmio] " $0 }
+    /systemc-register read reset/ { print "[linux-mmio] " $0 }
+    /systemc-register write pass/ { print "[linux-mmio] " $0 }
+    /systemc-register read pass/ { print "[linux-mmio] " $0 }
     /^write 0x100100/ { print "[linux-mmio] " $0 }
-    /register-file read pass/ { print "[linux-mmio] " $0 }
     /^read 0x100100/ { print "[linux-mmio] " $0 }
-    /register-file check passed/ { print "[linux-mmio] " $0 }
+    /systemc-register check passed/ { print "[linux-mmio] " $0 }
   '
 
   last_printed_log_line="${line_count}"
@@ -94,21 +97,23 @@ while [ "${elapsed}" -lt "${linux_boot_timeout}" ]; do
   mmio_read_count=$(grep -c "^read 0x100100" "${linux_boot_log}" 2>/dev/null || true)
   print_new_mmio_output
 
-  if grep -q "Running Harbor register-file check" "${linux_boot_log}" 2>/dev/null &&
-    grep -q "register-file write pass" "${linux_boot_log}" 2>/dev/null &&
-    grep -q "register-file read pass" "${linux_boot_log}" 2>/dev/null &&
-    grep -q "write 0x1001003c width 32 <- 0xa500000f" "${linux_boot_log}" 2>/dev/null &&
-    grep -q "read 0x1001003c width 32 -> 0xa500000f" "${linux_boot_log}" 2>/dev/null &&
-    grep -q "register-file check passed" "${linux_boot_log}" 2>/dev/null &&
-    [ "${mmio_write_count}" -eq 16 ] &&
-    [ "${mmio_read_count}" -eq 16 ]; then
+  if grep -q "Running Harbor SystemC register check" "${linux_boot_log}" 2>/dev/null &&
+    grep -q "systemc-register read reset" "${linux_boot_log}" 2>/dev/null &&
+    grep -q "read 0x10010000 width 32 -> 0x12345678" "${linux_boot_log}" 2>/dev/null &&
+    grep -q "systemc-register write pass" "${linux_boot_log}" 2>/dev/null &&
+    grep -q "write 0x10010000 width 32 <- 0xa5a55a5a" "${linux_boot_log}" 2>/dev/null &&
+    grep -q "systemc-register read pass" "${linux_boot_log}" 2>/dev/null &&
+    grep -q "read 0x10010000 width 32 -> 0xa5a55a5a" "${linux_boot_log}" 2>/dev/null &&
+    grep -q "systemc-register check passed" "${linux_boot_log}" 2>/dev/null &&
+    [ "${mmio_write_count}" -eq 1 ] &&
+    [ "${mmio_read_count}" -eq 2 ]; then
     mmio_test_seen=1
   fi
 
   if [ "${linux_init_seen}" -eq 1 ] && [ "${network_seen}" -eq 1 ] && [ "${mmio_test_seen}" -eq 1 ]; then
     cleanup_qemu
     trap - EXIT INT TERM
-    echo "Linux reached init, configured eth0, and ran mmio-test. Log: ${linux_boot_log}"
+    echo "Linux reached init, configured eth0, and ran systemc-register mmio-test. Log: ${linux_boot_log}"
     exit 0
   fi
 
@@ -122,9 +127,9 @@ while [ "${elapsed}" -lt "${linux_boot_timeout}" ]; do
   elapsed=$((elapsed + 1))
 
   if [ $((elapsed % 10)) -eq 0 ]; then
-    echo "[integration] Waiting for Linux init, eth0 DHCP, and mmio-test (${elapsed}s/${linux_boot_timeout}s). Log: ${linux_boot_log}"
+    echo "[integration] Waiting for Linux init, eth0 DHCP, and systemc-register mmio-test (${elapsed}s/${linux_boot_timeout}s). Log: ${linux_boot_log}"
   fi
 done
 
-echo "Timed out waiting for Linux init, eth0, and mmio-test after ${linux_boot_timeout}s. Log: ${linux_boot_log}" >&2
+echo "Timed out waiting for Linux init, eth0, and systemc-register mmio-test after ${linux_boot_timeout}s. Log: ${linux_boot_log}" >&2
 exit 1
